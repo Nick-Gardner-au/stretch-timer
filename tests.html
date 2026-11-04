@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stretch Timer tests</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; background: #141414; color: #eee; padding: 16px; }
+    .pass { color: #9cf54a; } .fail { color: #ff7a7a; } pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Stretch Timer tests</h1>
+  <div id="out"></div>
+  <script type="module">
+    // Same acceptance tests as the desktop app's tests/test_acceptance.py, run against the JS engine.
+    import * as store from "./js/store.js";
+    import * as programs from "./js/programs.js";
+    import { Engine, buildStep, buildWorkout, FINISHED } from "./js/engine.js";
+    import { SEQUENCE, parseTempo } from "./js/workout.js";
+
+    const NICK = programs.builtin();
+    const stepOf = (id) => SEQUENCE.findIndex(([e]) => e === id);
+    const eq = (a, b, msg = "") => {
+      if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${msg} expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+    };
+    const throws = (fn, msg) => {
+      try { fn(); } catch { return; }
+      throw new Error(`expected an error: ${msg}`);
+    };
+    const fakeClock = () => { const c = () => c.t; c.t = 0; return c; };
+    const run = (eng, clock, seconds, step = 0.05) => { for (let i = 0; i < Math.round(seconds / step); i++) { clock.t += step; eng.tick(); } };
+    const freshCfg = () => store.normaliseConfig(null);
+
+    const tests = {
+      "exercise 1 tempo 5-1-5-0"() {
+        const segs = buildWorkout(freshCfg(), NICK, 0);
+        eq([segs[0].kind, segs[0].duration], ["prepare", 5]);
+        const work = segs.filter((s) => s.step === 0 && s.kind === "phase");
+        eq(work.length, 30, "0s top pause skipped:");
+        eq(work.slice(0, 3).map((s) => [s.phase, s.duration]), [[0, 5], [1, 1], [2, 5]]);
+        const clock = fakeClock(), starts = [];
+        const eng = new Engine({ clock, cue: (ev, seg) => ev === "segment" && starts.push([Math.round(clock.t * 100) / 100, seg.phase]) });
+        eng.load(segs); eng.start(); starts.length = 0;
+        run(eng, clock, 27);
+        eq(starts.slice(0, 4), [[5, 0], [10, 1], [11, 2], [16, 0]]);
+      },
+      "changed tempo used for exercise 3"() {
+        const cfg = freshCfg();
+        cfg.tempos["3"] = [2, 0, 1, 0];
+        const work = buildStep(store.normaliseConfig(JSON.parse(JSON.stringify(cfg))), NICK, stepOf(3));
+        eq(work.slice(0, 2).map((s) => [s.phase, s.duration]), [[0, 2], [2, 1]]);
+        eq(work.reduce((a, s) => a + s.duration, 0), 30);
+      },
+      "rest 45s between steps"() {
+        const cfg = freshCfg(); cfg.rest = 45;
+        const segs = buildWorkout(cfg, NICK, 0);
+        const i = segs.findIndex((s) => s.kind === "rest");
+        eq([segs[i].step, segs[i].duration, segs[i + 1].step], [0, 45, 1]);
+      },
+      "tempo symbols X and -"() {
+        const cfg = store.normaliseConfig({ tempos: { 4: ["-", 0, "X", 2] } });
+        eq(cfg.tempos["4"], ["-", 0, "X", 2]);
+        const work = buildStep(cfg, NICK, stepOf(4));
+        eq(work.slice(0, 2).map((s) => [s.phase, s.duration]), [[2, 1], [3, 2]]);
+      },
+      "N/A tempo counts reps"() {
+        const work = buildStep(freshCfg(), NICK, stepOf(5));
+        eq([work.length, work.every((s) => s.kind === "rep")], [5, true]);
+      },
+      "static hold with two sets"() {
+        eq(buildStep(freshCfg(), NICK, stepOf(13)).map((s) => s.kind), ["hold", "setrest", "hold"]);
+      },
+      "interval timer"() {
+        const cfg = freshCfg(); cfg.timer = { work: 20, rest: 10, rounds: 3, cycles: 2 };
+        const segs = buildWorkout(cfg, programs.intervalTimer(cfg), 0);
+        eq(segs.slice(0, 7).map((s) => [s.kind, s.duration]),
+           [["prepare", 5], ["hold", 20], ["setrest", 10], ["hold", 20], ["setrest", 10], ["hold", 20], ["rest", 10]]);
+        eq(segs.filter((s) => s.kind === "hold").length, 6);
+      },
+      "tempo timer"() {
+        const cfg = store.normaliseConfig({ tempo_timer: { tempo: [2, "-", "X", 1], reps: 4, sets: 2, rest: 20 } });
+        const segs = buildWorkout(cfg, programs.resolve(cfg, [], "tempo"), 0);
+        const work = segs.filter((s) => s.kind === "phase");
+        eq(work.slice(0, 3).map((s) => [s.phase, s.duration]), [[0, 2], [2, 1], [3, 1]]);
+        eq(work.length, 24);
+        eq(segs.filter((s) => s.kind.endsWith("rest")).map((s) => [s.kind, s.duration]), [["setrest", 20]]);
+      },
+      "custom program round trip"() {
+        const raw = programs.newRaw("Morning");
+        raw.exercises = [
+          { name: "Squat", type: "dynamic", sets: 2, reps: 3, duration: null, tempo: parseTempo("30X1"), rep_time: null, sides: false, cue: "" },
+          { name: "Calf stretch", type: "static", sets: 1, reps: 1, duration: 20, tempo: null, rep_time: null, sides: true, cue: "Heel down" },
+        ];
+        const prog = programs.loadCustom(JSON.parse(JSON.stringify([raw])))[0];
+        eq(prog.name, "Morning");
+        eq(prog.sequence, [[1, ""], [2, "Left"], [2, "Right"]]);
+        const cfg = freshCfg(); cfg.rest = 15;
+        const segs = buildWorkout(cfg, prog, 0);
+        const squat = segs.filter((s) => s.step === 0 && s.kind === "phase");
+        eq(squat.slice(0, 3).map((s) => [s.phase, s.duration]), [[0, 3], [2, 1], [3, 1]]);
+        eq(squat.length, 18);
+        eq(programs.resolve(cfg, [prog], prog.key).name, "Morning");
+        eq(programs.resolve(cfg, [], prog.key).key, "builtin");
+      },
+      "parse tempo"() {
+        eq(parseTempo("4010"), [4, 0, 1, 0]);
+        eq(parseTempo("x0-1"), ["X", 0, "-", 1]);
+        eq(parseTempo("10,0,10,0"), [10, 0, 10, 0]);
+        eq(parseTempo(" "), null);
+        for (const bad of ["401", "0000", "4a10"]) throws(() => parseTempo(bad), bad);
+      },
+      "pause and resume"() {
+        const clock = fakeClock();
+        const eng = new Engine({ clock });
+        eng.load(buildWorkout(freshCfg(), NICK, 0)); eng.start();
+        run(eng, clock, 2); eng.pause(); clock.t += 100; eng.tick(); eng.resume(); run(eng, clock, 1);
+        eq([eng.idx, Math.round(eng.elapsed * 100) / 100], [0, 3]);
+      },
+      "catches up quietly after the page was paused"() {
+        const clock = fakeClock(), events = [];
+        const eng = new Engine({ clock, cue: (ev, seg) => events.push([ev, seg.kind, seg.phase]) });
+        eng.load(buildWorkout(freshCfg(), NICK, 0)); eng.start(); events.length = 0;
+        clock.t = 5 + 11 + 2; // 18s later: rep 2, eccentric, 2s in
+        eng.tick();
+        eq(events, [["segment", "phase", 0]]);
+        eq([eng.segment.rep, Math.round(eng.elapsed)], [2, 2]);
+        clock.t = 10000; eng.tick();
+        eq(eng.state, FINISHED);
+      },
+      "backup accepts desktop programs.json"() {
+        eq(store.readBackup([{ id: "a" }]).programs.length, 1);
+        throws(() => store.readBackup({ foo: 1 }), "not a backup");
+      },
+      async "real clock accurate within 0.1s"() {
+        const cfg = freshCfg(); cfg.prepare = 2;
+        const times = [];
+        const eng = new Engine({ cue: (ev) => times.push([performance.now() / 1000, ev]) });
+        eng.load(buildWorkout(cfg, NICK, 0).slice(0, 2));
+        const t0 = performance.now() / 1000;
+        eng.start();
+        const timer = setInterval(() => eng.tick(), 20);
+        await new Promise((r) => setTimeout(r, 2300));
+        clearInterval(timer);
+        const start = times.filter(([, ev]) => ev === "segment")[1][0];
+        if (Math.abs(start - t0 - 2) >= 0.1) throw new Error(`off by ${(start - t0 - 2).toFixed(3)}s`);
+      },
+    };
+
+    const out = document.getElementById("out");
+    const results = [];
+    for (const [name, fn] of Object.entries(tests)) {
+      try {
+        await fn();
+        results.push({ name, ok: true });
+      } catch (e) {
+        results.push({ name, ok: false, error: e.message });
+      }
+    }
+    const failed = results.filter((r) => !r.ok);
+    out.innerHTML = `<p class="${failed.length ? "fail" : "pass"}"><b>${results.length - failed.length}/${results.length} passed</b></p>` +
+      results.map((r) => `<div class="${r.ok ? "pass" : "fail"}">${r.ok ? "✓" : "✗"} ${r.name}${r.ok ? "" : `<pre>${r.error}</pre>`}</div>`).join("");
+    window.testResults = { passed: results.length - failed.length, total: results.length, failed };
+  </script>
+</body>
+</html>

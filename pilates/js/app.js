@@ -88,6 +88,9 @@ class App {
     $("progressBtn").addEventListener("click", () => this.openProgress());
     $("libraryBtn").addEventListener("click", () => this.openLibrary());
     $("diagramBtn").addEventListener("click", () => this.openDetail(this.plan.steps[this.step].ex, false));
+    $("diagramBtn").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") this.openDetail(this.plan.steps[this.step].ex, false);
+    });
     $("lengthBtn").addEventListener("click", () => this.toggleLengthMenu());
     for (const key of ["sound", "voice", "ticks"]) {
       $(`t${key[0].toUpperCase()}${key.slice(1)}`).addEventListener("change", (e) => {
@@ -582,7 +585,7 @@ class App {
     const items = EXERCISES.map((ex) => {
       const off = this.cfg.excluded.includes(ex.id);
       return h("button", { class: `lib-item${off ? " off" : ""}`, onclick: () => this.openDetail(ex, true) },
-        h("span", { html: diagramSVG(DIAGRAMS[ex.key], ex.name) }),
+        h("span", { class: "fig-slot", html: diagramSVG(DIAGRAMS[ex.key], ex.name) }),
         h("span", {}, h("b", {}, `${ex.id}. ${ex.name}`),
           h("small", {}, off ? "Excluded from workouts" : inPlan.has(ex.id) ? "In this workout" : `From ${Object.entries(LEVEL_FOR_LENGTH).find(([, l]) => l >= ex.level)[0]} min`)),
         h("span", { class: `tag l${ex.level}` }, LEVELS[ex.level]));

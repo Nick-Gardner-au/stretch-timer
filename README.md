@@ -88,8 +88,8 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/pilates
    - Repetitions and the time between exercises are adjusted so the workout fits the length. Settings → Exercises → *All 34 every time* keeps every exercise in every length with fewer repetitions (15 minutes then runs about 17 minutes).
 2. **Pace:** Slow, Standard or Brisk breathing. Slower breathing gives fewer repetitions in the same time.
 3. **Breath tempo counter:** each repetition is timed as breathe in · pause · breathe out · pause, shown in the four coloured cells with a different wood-block sound for each part. The Hundred is always 10 breaths of 5 counts in and 5 counts out, with a tick for each arm pump. Voice counts the repetitions; Settings → *Speak breath cues* also says "Breathe in" and "Breathe out".
-4. **Diagrams:** each exercise has a stick-figure diagram. White is the start position, yellow is where you move to, and blue arrows show the direction. Tap the diagram for step-by-step instructions, the breathing pattern, focus and cautions.
-5. **Library:** all 34 exercises with diagrams. From an exercise's page you can exclude it from your workouts (for example, for an injury) or jump to it.
+4. **Photos:** each exercise shows four photos of Joseph Pilates performing it, numbered 1–4 in sequence, from the *Return to Life* poster (© Pilates Guild, used with permission). Tap the photos for step-by-step instructions, the breathing pattern, focus and cautions.
+5. **Library:** all 34 exercises with photos. From an exercise's page you can exclude it from your workouts (for example, for an injury) or jump to it.
 6. **Progress:** sessions this week, day streak, total sessions and time, a 5-week calendar (green = complete, dark green = partial), recent sessions, and how many times you have completed each exercise. A session is saved as you go, so closing the app mid-workout keeps what you did. Sessions shorter than 1 minute with no finished exercise are not saved.
 7. **Backup:** Settings → Backup → *Export* saves your settings and history to a file; *Import* loads it on another phone.
 
@@ -101,7 +101,7 @@ Controls work as in Stretch Timer: ◀ ▶ and the list jump between exercises (
 python3 -m http.server 8765
 ```
 
-Then open http://localhost:8765/pilates/ for the app, or http://localhost:8765/pilates/tests.html to run its 10 tests.
+Then open http://localhost:8765/pilates/ for the app, or http://localhost:8765/pilates/tests.html to run its 11 tests.
 
 ## Files
 
@@ -109,7 +109,7 @@ Then open http://localhost:8765/pilates/ for the app, or http://localhost:8765/p
 |---|---|
 | `pilates/index.html`, `pilates/pilates.css` | The page; it also uses the Stretch Timer's `styles.css` and font |
 | `pilates/js/data.js` | The 34 exercises: level, repetitions, breath tempo, steps and cautions |
-| `pilates/js/diagrams.js` | The stick-figure diagrams |
+| `pilates/img/` | One 2×2 photo card per exercise, cropped from the *Return to Life* poster |
 | `pilates/js/plan.js` | Fits the workout to 15, 25 or 45 minutes and builds the timed segments |
 | `pilates/js/store.js` | Settings, workout history and progress figures |
 | `pilates/js/app.js` | The screen, Settings, Library and Progress |

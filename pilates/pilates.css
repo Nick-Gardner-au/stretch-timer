@@ -1,19 +1,5 @@
 /* Pilates Mat: additions on top of the Stretch Timer's styles.css */
 
-:root {
-  --figure: #ffffff;
-  --ghost: #f2f53d;
-  --arrow: #5ec8f2;
-  --mat: #3a3a3a;
-}
-
-:root[data-theme="light"] {
-  --figure: #111111;
-  --ghost: #8a7d00;
-  --arrow: #1e7fc8;
-  --mat: #cfcfcf;
-}
-
 /* progress icon in the header */
 .bars {
   display: flex;
@@ -39,53 +25,10 @@
   font-size: 26px;
 }
 
-/* ---------- diagrams ---------- */
-.diagram {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.diagram .mat {
-  fill: var(--mat);
-}
-
-.diagram .fig {
-  fill: none;
-  stroke: var(--figure);
-  stroke-width: 3.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.diagram .fig circle {
-  fill: var(--figure);
-}
-
-.diagram .fig .far {
-  opacity: 0.5;
-}
-
-.diagram .ghost {
-  stroke: var(--ghost);
-  opacity: 0.55;
-}
-
-.diagram .ghost circle {
-  fill: var(--ghost);
-}
-
-.diagram .arrow, .diagram .arrow-head {
-  fill: none;
-  stroke: var(--arrow);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
-
 /* Fixed-height box with the SVG pinned inside it: WebKit (iPhone) does not resolve percentage
    heights for SVGs in grid or button layouts, which let the diagram spill over the tempo row. */
 .figure-box {
-  --fig-h: clamp(84px, 15vh, 150px);
+  --fig-h: clamp(96px, 17vh, 170px);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -101,13 +44,12 @@
 
 .fig-slot {
   position: relative;
-  flex: 1 1 55%;
-  min-width: 0;
-  height: 100%;
+  flex: none;
+  width: calc(var(--fig-h) * 1.58);
   height: var(--fig-h);
 }
 
-.fig-slot > svg {
+.fig-slot > .photo {
   position: absolute;
   top: 0;
   left: 0;
@@ -115,10 +57,29 @@
   height: 100%;
 }
 
+/* the exercise photos: 2x2 sequence on white, 600 x 380 */
+.photo {
+  display: block;
+  background: #fff;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.detail-figure .photo {
+  width: 100%;
+  height: auto;
+}
+
+.credit {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 6px 4px 0;
+}
+
 .figure-box .cue {
   flex: 1 1 45%;
   min-width: 0;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 6;
   font-size: 13px;
   margin: 0;
 }
@@ -160,8 +121,12 @@
 .lib-item .fig-slot {
   display: block;
   flex: none;
-  width: 96px;
-  height: 56px;
+  width: 98px;
+  height: 62px;
+}
+
+.lib-item .photo {
+  border-radius: 6px;
 }
 
 .lib-item > span:nth-child(2) {
@@ -203,10 +168,6 @@
   border-radius: 10px;
   padding: 6px;
   margin-bottom: 8px;
-}
-
-.detail-figure .diagram {
-  height: auto;
 }
 
 .legend {
@@ -416,7 +377,7 @@
 }
 
 @media (max-height: 700px) {
-  .figure-box { --fig-h: 78px; }
+  .figure-box { --fig-h: 84px; }
   .num { font-size: 60px; }
   .play svg { width: 88px; height: 88px; }
   .play .icon { top: 44px; }

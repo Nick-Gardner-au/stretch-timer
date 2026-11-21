@@ -1,11 +1,10 @@
-// Pilates Mat: guided timer for the 34 original mat exercises, with breath tempo, diagrams and progress tracking.
+// Pilates Mat: guided timer for the 34 original mat exercises, with breath tempo, photos and progress tracking.
 // Reuses the Stretch Timer's clock-based engine and wood-block sounds.
 
 import { Engine, RUNNING, PAUSED, STOPPED, FINISHED } from "../../js/engine.js";
 import { Player } from "../../js/sound.js";
 import * as store from "./store.js";
 import { EXERCISES, BY_ID, LEVELS, PHASES } from "./data.js";
-import { DIAGRAMS, diagramSVG } from "./diagrams.js";
 import { LENGTHS, PACES, SELECTIONS, LEVEL_FOR_LENGTH, buildPlan, buildSegments, stepTitle } from "./plan.js";
 
 const $ = (id) => document.getElementById(id);
@@ -29,6 +28,9 @@ function fmtTime(seconds) {
   const s = Math.max(0, Math.ceil(seconds - 1e-6));
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
+
+// The 2x2 sequence of Joseph Pilates' photos for an exercise.
+const photo = (ex) => h("img", { class: "photo", src: `img/${ex.key}.jpg`, alt: `${ex.name}: four photos in sequence`, decoding: "async" });
 
 const fmtMinutes = (seconds) => `${Math.round(seconds / 60)} min`;
 const fmtDate = (iso) => new Date(iso).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
@@ -363,7 +365,7 @@ class App {
     $("exDetail").textContent = bits.join("  ·  ");
     $("exCue").textContent = ex.cue;
     if (this.diagramKey !== ex.key) {
-      $("diagram").innerHTML = diagramSVG(DIAGRAMS[ex.key], ex.name);
+      $("diagram").replaceChildren(photo(ex));
       this.diagramKey = ex.key;
     }
     $("stepSelect").value = String(this.step);
@@ -579,13 +581,13 @@ class App {
     this.openSheet([body], [h("span", { class: "spacer" }), h("button", { class: "btn", onclick: () => this.closeSheet() }, "Cancel"), saveBtn]);
   }
 
-  // Library: all 34 exercises with diagrams.
+  // Library: all 34 exercises with photos.
   openLibrary() {
     const inPlan = new Set(this.plan.exercises.map((e) => e.id));
     const items = EXERCISES.map((ex) => {
       const off = this.cfg.excluded.includes(ex.id);
       return h("button", { class: `lib-item${off ? " off" : ""}`, onclick: () => this.openDetail(ex, true) },
-        h("span", { class: "fig-slot", html: diagramSVG(DIAGRAMS[ex.key], ex.name) }),
+        h("span", { class: "fig-slot" }, photo(ex)),
         h("span", {}, h("b", {}, `${ex.id}. ${ex.name}`),
           h("small", {}, off ? "Excluded from workouts" : inPlan.has(ex.id) ? "In this workout" : `From ${Object.entries(LEVEL_FOR_LENGTH).find(([, l]) => l >= ex.level)[0]} min`)),
         h("span", { class: `tag l${ex.level}` }, LEVELS[ex.level]));
@@ -612,11 +614,8 @@ class App {
     } });
     const body = [
       h("h2", {}, `${ex.id}. ${ex.name.toUpperCase()}`),
-      h("div", { class: "detail-figure" }, h("div", { html: diagramSVG(DIAGRAMS[ex.key], ex.name) }),
-        h("div", { class: "legend" },
-          h("span", {}, h("i", { style: "background: var(--figure)" }), "Start"),
-          h("span", {}, h("i", { style: "background: var(--ghost)" }), "Move to"),
-          h("span", {}, h("i", { style: "background: var(--arrow)" }), "Direction"))),
+      h("div", { class: "detail-figure" }, photo(ex),
+        h("p", { class: "credit" }, "Photos 1–4 in sequence: Joseph H. Pilates, Return to Life. Poster © Pilates Guild.")),
       h("dl", { class: "facts" },
         h("dt", {}, "Level"), h("dd", {}, h("span", { class: `tag l${ex.level}` }, LEVELS[ex.level])),
         h("dt", {}, "This workout"), h("dd", {}, st ? `${st.reps} ${ex.fixed ? "breaths" : "reps"}${ex.sides ? ` × ${ex.sides.join(", ")}` : ""}` : "Not included"),

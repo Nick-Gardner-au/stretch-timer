@@ -1,10 +1,15 @@
 // Offline support for Pilates Mat: cache the app files, serve from cache, refresh in the background.
 // Bump VERSION whenever you upload changed files so phones pick up the new version.
-const VERSION = "pilates-mat-v2";
+const VERSION = "pilates-mat-v3";
 const FILES = [
   "./", "index.html", "pilates.css", "manifest.webmanifest",
-  "js/app.js", "js/data.js", "js/diagrams.js", "js/plan.js", "js/store.js",
+  "js/app.js", "js/data.js", "js/plan.js", "js/store.js",
   "../styles.css", "../js/engine.js", "../js/sound.js", "../js/workout.js", "../fonts/BebasNeue-Bold.otf",
+  ...["hundred", "rollup", "rollover", "legcircle", "rollingball", "singleleg", "doubleleg", "spinestretch",
+     "openrocker", "corkscrew", "saw", "swan", "singlekick", "doublekick", "neckpull", "scissors", "bicycle",
+     "bridge", "spinetwist", "jackknife", "sidekick", "teaser", "hiptwist", "swimming", "legpullfront",
+     "legpullback", "kneelingkick", "sidebend", "boomerang", "seal", "crab", "rocking", "controlbalance", "pushup"]
+    .map((k) => `img/${k}.jpg`),
   "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png",
 ];
 

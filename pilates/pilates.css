@@ -82,27 +82,42 @@
   stroke-linecap: round;
 }
 
+/* Fixed-height box with the SVG pinned inside it: WebKit (iPhone) does not resolve percentage
+   heights for SVGs in grid or button layouts, which let the diagram spill over the tempo row. */
 .figure-box {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+  --fig-h: clamp(84px, 15vh, 150px);
+  display: flex;
   align-items: center;
   gap: 8px;
   margin: 4px 12px 6px;
   padding: 0 10px 0 0;
   background: var(--card);
-  border: 0;
   border-radius: 10px;
-  text-align: left;
-  height: clamp(84px, 15dvh, 150px);
-  min-height: 0;
+  height: var(--fig-h);
+  overflow: hidden;
+  cursor: pointer;
+  flex: none;
 }
 
-.figure-box #diagram {
-  height: 100%;
+.fig-slot {
+  position: relative;
+  flex: 1 1 55%;
   min-width: 0;
+  height: 100%;
+  height: var(--fig-h);
+}
+
+.fig-slot > svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .figure-box .cue {
+  flex: 1 1 45%;
+  min-width: 0;
   -webkit-line-clamp: 4;
   font-size: 13px;
   margin: 0;
@@ -130,8 +145,7 @@
 
 /* ---------- sheets: library, progress ---------- */
 .lib-item {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) auto;
+  display: flex;
   gap: 10px;
   align-items: center;
   width: 100%;
@@ -143,8 +157,16 @@
   text-align: left;
 }
 
-.lib-item .diagram {
+.lib-item .fig-slot {
+  display: block;
+  flex: none;
+  width: 96px;
   height: 56px;
+}
+
+.lib-item > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
 }
 
 .lib-item b {
@@ -394,7 +416,7 @@
 }
 
 @media (max-height: 700px) {
-  .figure-box { height: 78px; }
+  .figure-box { --fig-h: 78px; }
   .num { font-size: 60px; }
   .play svg { width: 88px; height: 88px; }
   .play .icon { top: 44px; }

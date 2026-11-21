@@ -1,6 +1,6 @@
 // Offline support: cache the app files, serve from cache, refresh in the background.
 // Bump VERSION whenever you upload changed files so phones pick up the new version.
-const VERSION = "stretch-timer-v1";
+const VERSION = "stretch-timer-v2";
 const FILES = [
   "./", "index.html", "styles.css", "manifest.webmanifest",
   "js/app.js", "js/engine.js", "js/programs.js", "js/sound.js", "js/store.js", "js/workout.js",
@@ -15,7 +15,7 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("stretch-timer-") && k !== VERSION).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilates Mat tests</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; background: #141414; color: #eee; padding: 16px; }
+    .pass { color: #9cf54a; } .fail { color: #ff7a7a; } pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Pilates Mat tests</h1>
+  <div id="out"></div>
+  <script type="module">
+    import { EXERCISES } from "./js/data.js";
+    import { DIAGRAMS, diagramSVG } from "./js/diagrams.js";
+    import { LENGTHS, PACES, SWITCH_REST, buildPlan, buildSegments } from "./js/plan.js";
+    import * as store from "./js/store.js";
+    import { Engine, FINISHED } from "../js/engine.js";
+
+    const eq = (a, b, msg = "") => {
+      if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${msg} expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+    };
+    const ok = (cond, msg) => { if (!cond) throw new Error(msg); };
+    const cfg = (o = {}) => ({ ...store.normaliseConfig(null), ...o });
+    const fakeClock = () => { const c = () => c.t; c.t = 0; return c; };
+
+    const tests = {
+      "34 exercises in the original order, each with a diagram and steps"() {
+        eq(EXERCISES.map((e) => e.id), Array.from({ length: 34 }, (_, i) => i + 1));
+        eq(EXERCISES[0].name, "The Hundred");
+        eq(EXERCISES[33].name, "The Push Up");
+        for (const e of EXERCISES) {
+          ok(DIAGRAMS[e.key], `no diagram for ${e.name}`);
+          ok(diagramSVG(DIAGRAMS[e.key]).includes("<svg"), `bad svg for ${e.name}`);
+          ok(e.steps.length >= 3 && e.caution && e.cue, `missing text for ${e.name}`);
+          eq(e.tempo.length, 4, e.name);
+        }
+      },
+      "every length and pace fits within 1 minute when selecting by level"() {
+        for (const pace of Object.keys(PACES)) for (const length of LENGTHS) {
+          const p = buildPlan(cfg({ length, pace }));
+          ok(Math.abs(p.total - length * 60) <= 60, `${length} min ${pace}: ${p.total}s`);
+        }
+      },
+      "15 / 25 / 45 minutes include 10 / 21 / 34 exercises in order"() {
+        eq(LENGTHS.map((length) => buildPlan(cfg({ length })).exercises.length), [10, 21, 34]);
+        const ids = buildPlan(cfg({ length: 45 })).exercises.map((e) => e.id);
+        eq(ids, [...ids].sort((a, b) => a - b));
+      },
+      "The Hundred is always 10 breaths of 5 in, 5 out"() {
+        for (const length of LENGTHS) {
+          const st = buildPlan(cfg({ length })).steps[0];
+          eq([st.ex.id, st.reps, st.tempo], [1, 10, [5, 0, 5, 0]]);
+        }
+      },
+      "excluded exercises are left out; excluding everything falls back"() {
+        const p = buildPlan(cfg({ length: 15, excluded: [2, 5] }));
+        ok(!p.exercises.some((e) => [2, 5].includes(e.id)), "still included");
+        eq(p.exercises.length, 8);
+        eq(buildPlan(cfg({ length: 15, excluded: EXERCISES.map((e) => e.id) })).exercises.length, 10);
+      },
+      "segments add up to the plan total; side switches are 5s"() {
+        const p = buildPlan(cfg({ length: 25 }));
+        const segs = buildSegments(p, 10, 0);
+        eq(Math.round(segs.reduce((a, s) => a + s.duration, 0)), p.total);
+        const circle = p.steps.findIndex((s) => s.ex.id === 4);
+        const rest = segs.find((s) => s.kind === "rest" && s.step === circle);
+        eq([rest.duration, rest.switch], [SWITCH_REST, true]);
+        const afterCircle = segs.find((s) => s.kind === "rest" && s.step === circle + 3);
+        eq([afterCircle.duration, afterCircle.switch], [p.transition, false]);
+      },
+      "15-minute workout runs to the finish on the clock"() {
+        const p = buildPlan(cfg({ length: 15 }));
+        const clock = fakeClock();
+        let finished = 0, phases = 0;
+        const eng = new Engine({ clock, cue: (ev, seg) => { if (ev === "finished") finished++; if (ev === "segment" && seg.kind === "phase") phases++; } });
+        eng.load(buildSegments(p, 10, 0));
+        eng.start();
+        while (eng.state !== FINISHED && clock.t < 2000) { clock.t += 0.1; eng.tick(); }
+        eq(finished, 1);
+        ok(Math.abs(clock.t - p.total) < 0.2, `finished at ${clock.t}, planned ${p.total}`);
+        ok(phases > 100, "too few phases");
+      },
+      "settings are validated"() {
+        const c = store.normaliseConfig({ length: 30, pace: "fast", prepare: 500, excluded: [1, 99, "x"], theme: "pink" });
+        eq([c.length, c.pace, c.prepare, c.excluded, c.theme], [25, "standard", 10, [1], "dark"]);
+      },
+      "streak, week and per-exercise tallies"() {
+        const now = new Date(2026, 10, 21, 12); // Saturday
+        const at = (d) => new Date(2026, 10, d, 8).toISOString();
+        const hist = [
+          { id: "a", start: at(17), seconds: 900, planned: [1, 2], done: [1, 2], complete: true },
+          { id: "b", start: at(19), seconds: 600, planned: [1, 2], done: [1], complete: false },
+          { id: "c", start: at(20), seconds: 1500, planned: [1, 2], done: [1, 2], complete: true },
+          { id: "d", start: at(21), seconds: 1500, planned: [1], done: [1], complete: true },
+        ];
+        const s = store.stats(hist, now);
+        eq([s.streak, s.week, s.sessions, s.complete, s.minutes], [3, 4, 4, 3, 75]);
+        eq([s.perExercise[1].count, s.perExercise[2].count], [4, 2]);
+      },
+      "backups are checked"() {
+        let threw = false;
+        try { store.readBackup({ app: "stretch-timer" }); } catch { threw = true; }
+        ok(threw, "accepted a foreign file");
+        const b = store.readBackup({ app: "pilates-timer", config: { length: 45 }, history: [{ id: "x", start: "2026-01-01T00:00:00Z", seconds: 5, planned: [], done: [] }, { bad: 1 }] });
+        eq([b.config.length, b.history.length], [45, 1]);
+      },
+    };
+
+    const out = document.getElementById("out");
+    let failed = 0;
+    for (const [name, fn] of Object.entries(tests)) {
+      try {
+        fn();
+        out.insertAdjacentHTML("beforeend", `<div class="pass">PASS ${name}</div>`);
+      } catch (e) {
+        failed++;
+        out.insertAdjacentHTML("beforeend", `<div class="fail">FAIL ${name}<pre>${e.message}</pre></div>`);
+      }
+    }
+    out.insertAdjacentHTML("beforeend", `<h2 class="${failed ? "fail" : "pass"}">${Object.keys(tests).length - failed} passed, ${failed} failed</h2>`);
+    document.title = failed ? "FAILED" : "PASSED";
+  </script>
+</body>
+</html>

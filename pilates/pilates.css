@@ -1,0 +1,401 @@
+/* Pilates Mat: additions on top of the Stretch Timer's styles.css */
+
+:root {
+  --figure: #ffffff;
+  --ghost: #f2f53d;
+  --arrow: #5ec8f2;
+  --mat: #3a3a3a;
+}
+
+:root[data-theme="light"] {
+  --figure: #111111;
+  --ghost: #8a7d00;
+  --arrow: #1e7fc8;
+  --mat: #cfcfcf;
+}
+
+/* progress icon in the header */
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 27px;
+}
+
+.bars i {
+  width: 7px;
+  background: var(--hi);
+}
+
+.bars i:nth-child(1) { height: 11px; }
+.bars i:nth-child(2) { height: 19px; }
+.bars i:nth-child(3) { height: 27px; }
+
+.info {
+  padding-bottom: 0;
+}
+
+.info h1 {
+  font-size: 26px;
+}
+
+/* ---------- diagrams ---------- */
+.diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.diagram .mat {
+  fill: var(--mat);
+}
+
+.diagram .fig {
+  fill: none;
+  stroke: var(--figure);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.diagram .fig circle {
+  fill: var(--figure);
+}
+
+.diagram .fig .far {
+  opacity: 0.5;
+}
+
+.diagram .ghost {
+  stroke: var(--ghost);
+  opacity: 0.55;
+}
+
+.diagram .ghost circle {
+  fill: var(--ghost);
+}
+
+.diagram .arrow, .diagram .arrow-head {
+  fill: none;
+  stroke: var(--arrow);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.figure-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+  align-items: center;
+  gap: 8px;
+  margin: 4px 12px 6px;
+  padding: 0 10px 0 0;
+  background: var(--card);
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+  height: clamp(84px, 15dvh, 150px);
+  min-height: 0;
+}
+
+.figure-box #diagram {
+  height: 100%;
+  min-width: 0;
+}
+
+.figure-box .cue {
+  -webkit-line-clamp: 4;
+  font-size: 13px;
+  margin: 0;
+}
+
+.figure-box .cue::after {
+  content: " Tap for steps ›";
+  color: var(--hi);
+  font-weight: 600;
+}
+
+.tempo {
+  padding-top: 0;
+}
+
+.toggles {
+  align-items: center;
+}
+
+.toggles .small {
+  margin-left: auto;
+  font-size: 16px;
+  padding: 5px 12px;
+}
+
+/* ---------- sheets: library, progress ---------- */
+.lib-item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  background: var(--card);
+  border: 0;
+  border-radius: 10px;
+  padding: 4px 10px 4px 4px;
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.lib-item .diagram {
+  height: 56px;
+}
+
+.lib-item b {
+  display: block;
+  font-size: 15px;
+}
+
+.lib-item small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.lib-item.off {
+  opacity: 0.45;
+}
+
+.tag {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--raised);
+  white-space: nowrap;
+}
+
+.tag.l1 { color: var(--p2); }
+.tag.l2 { color: var(--p1); }
+.tag.l3 { color: var(--rest); }
+
+.detail-figure {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 6px;
+  margin-bottom: 8px;
+}
+
+.detail-figure .diagram {
+  height: auto;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 4px 0;
+}
+
+.legend i {
+  display: inline-block;
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.steps {
+  margin: 4px 0 10px;
+  padding-left: 22px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.steps li {
+  margin-bottom: 4px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
+.facts dt {
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.caution {
+  border-left: 4px solid var(--rest);
+  background: var(--card);
+  padding: 8px 10px;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tile {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.tile .n {
+  font-family: var(--display);
+  font-size: 36px;
+  line-height: 1;
+  color: var(--hi);
+}
+
+.tile .t {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.cal .dow {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.cal .day {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cal .day.part {
+  background: color-mix(in srgb, var(--work) 40%, var(--card));
+  color: var(--ink);
+}
+
+.cal .day.full {
+  background: var(--work);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.cal .day.today {
+  outline: 2px solid var(--hi);
+  outline-offset: -2px;
+}
+
+.cal .day.future {
+  opacity: 0.3;
+}
+
+.session {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  background: var(--card);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.session small {
+  display: block;
+  color: var(--muted);
+}
+
+.session .btn {
+  font-size: 15px;
+  padding: 5px 10px;
+}
+
+.tally {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px 12px;
+  font-size: 14px;
+  align-items: center;
+}
+
+.tally .muted, .muted {
+  color: var(--muted);
+}
+
+.tally .count {
+  font-family: var(--display);
+  font-size: 20px;
+  color: var(--hi);
+  text-align: right;
+}
+
+.choice {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.choice button {
+  background: var(--raised);
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 4px;
+  font-family: var(--display);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.choice button small {
+  display: block;
+  font-family: var(--body);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.choice button.on {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.choice button.on small {
+  color: var(--accent-fg);
+}
+
+.row-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 12px;
+}
+
+@media (max-height: 700px) {
+  .figure-box { height: 78px; }
+  .num { font-size: 60px; }
+  .play svg { width: 88px; height: 88px; }
+  .play .icon { top: 44px; }
+}

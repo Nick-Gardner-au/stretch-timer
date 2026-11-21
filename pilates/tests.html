@@ -14,7 +14,6 @@
   <div id="out"></div>
   <script type="module">
     import { EXERCISES } from "./js/data.js";
-    import { DIAGRAMS, diagramSVG } from "./js/diagrams.js";
     import { LENGTHS, PACES, SWITCH_REST, buildPlan, buildSegments } from "./js/plan.js";
     import * as store from "./js/store.js";
     import { Engine, FINISHED } from "../js/engine.js";
@@ -27,13 +26,19 @@
     const fakeClock = () => { const c = () => c.t; c.t = 0; return c; };
 
     const tests = {
-      "34 exercises in the original order, each with a diagram and steps"() {
+      async "every exercise has its photo card, and the offline cache lists it"() {
+        const sw = await (await fetch("sw.js")).text();
+        for (const e of EXERCISES) {
+          const res = await fetch(`img/${e.key}.jpg`);
+          ok(res.ok, `no photo for ${e.name}`);
+          ok(sw.includes(`"${e.key}"`), `${e.key} missing from sw.js`);
+        }
+      },
+      "34 exercises in the original order, each with steps"() {
         eq(EXERCISES.map((e) => e.id), Array.from({ length: 34 }, (_, i) => i + 1));
         eq(EXERCISES[0].name, "The Hundred");
         eq(EXERCISES[33].name, "The Push Up");
         for (const e of EXERCISES) {
-          ok(DIAGRAMS[e.key], `no diagram for ${e.name}`);
-          ok(diagramSVG(DIAGRAMS[e.key]).includes("<svg"), `bad svg for ${e.name}`);
           ok(e.steps.length >= 3 && e.caution && e.cue, `missing text for ${e.name}`);
           eq(e.tempo.length, 4, e.name);
         }
@@ -113,7 +118,7 @@
     let failed = 0;
     for (const [name, fn] of Object.entries(tests)) {
       try {
-        fn();
+        await fn();
         out.insertAdjacentHTML("beforeend", `<div class="pass">PASS ${name}</div>`);
       } catch (e) {
         failed++;

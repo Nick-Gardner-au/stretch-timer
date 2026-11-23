@@ -3,6 +3,7 @@
 
 import { Engine, RUNNING, PAUSED, STOPPED, FINISHED } from "../../js/engine.js";
 import { Player } from "../../js/sound.js";
+import { switcherItems, rememberApp } from "../../js/apps.js";
 import * as store from "./store.js";
 import { EXERCISES, BY_ID, LEVELS, PHASES } from "./data.js";
 import { LENGTHS, PACES, SELECTIONS, LEVEL_FOR_LENGTH, buildPlan, buildSegments, stepTitle } from "./plan.js";
@@ -186,7 +187,7 @@ class App {
       const on = len === this.cfg.length;
       return h("button", { role: "menuitemradio", "aria-checked": String(on), onclick: () => { this.closeLengthMenu(); this.setLength(len); } },
         h("span", { class: `dot${on ? " on" : ""}` }), `${len} minutes · ${p.exercises.length} exercises`);
-    }));
+    }), ...switcherItems("pilates", () => this.isActive()));
     menu.hidden = false;
     $("lengthBtn").setAttribute("aria-expanded", "true");
   }
@@ -755,6 +756,7 @@ class App {
 }
 
 window.pilatesApp = new App();
+rememberApp("pilates");
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});

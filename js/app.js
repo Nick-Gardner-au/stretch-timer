@@ -2,6 +2,7 @@
 
 import * as store from "./store.js";
 import * as programs from "./programs.js";
+import { switcherItems, rememberApp } from "./apps.js";
 import { Engine, buildWorkout, RUNNING, PAUSED, STOPPED, FINISHED } from "./engine.js";
 import { Player, Announcer } from "./sound.js";
 import { EXERCISES, PHASES, PHASE_PORTIONS, TEMPO_SYMBOLS, parseTempo, phaseSeconds, tempoCode } from "./workout.js";
@@ -170,6 +171,7 @@ class App {
       item("Enter custom program…", () => this.openCustomEditor(null)),
       item("Edit this program…", () => this.openCustomEditor(this.program), { disabled: !custom }),
       item("Delete this program", () => this.deleteProgram(), { disabled: !custom }),
+      ...switcherItems("timer", () => this.isActive()),
     );
     menu.hidden = false;
     $("programBtn").setAttribute("aria-expanded", "true");
@@ -737,6 +739,7 @@ function setText(id, text) {
 }
 
 window.stretchTimer = new App();
+rememberApp("timer");
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});

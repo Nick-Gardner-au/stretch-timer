@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en-AU" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Mobility</title>
+  <meta name="description" content="Progressive hip, spine and hamstring mobility sessions">
+  <meta name="theme-color" content="#141414">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mobility">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="mobility.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="top">
+      <button id="settingsBtn" class="corner" aria-label="Settings">
+        <span class="grid9"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <small>Settings</small>
+      </button>
+      <button id="sessionBtn" class="program" aria-haspopup="menu" aria-expanded="false">
+        <span class="program-name"><span id="programName"></span><span class="caret"></span></span>
+        <span id="timeLeft" class="time-left"></span>
+      </button>
+      <button id="progressBtn" class="corner" aria-label="Progress">
+        <span class="bars"><i></i><i></i><i></i></span>
+        <small>Progress</small>
+      </button>
+    </header>
+    <div id="sessionMenu" class="menu" role="menu" hidden></div>
+
+    <section class="info">
+      <div id="exTrack" class="track-label"></div>
+      <h1 id="exName"></h1>
+      <div id="exDetail" class="detail"></div>
+    </section>
+
+    <div id="benchBtn" class="bench-box" role="button" tabindex="0" aria-label="Show exercise steps and benchmark">
+      <div id="benchLevel" class="bench-level"></div>
+      <div class="bench-main">
+        <div class="bench-h">BENCHMARK</div>
+        <p id="benchText" class="bench-text"></p>
+        <div id="benchMet" class="bench-met"></div>
+      </div>
+    </div>
+
+    <section class="stage">
+      <div id="mainBlock" class="block main">
+        <div id="mainLabel" class="label"></div>
+        <div id="mainTime" class="time"></div>
+        <div id="mainBar" class="bar"></div>
+      </div>
+      <div id="nextBlock" class="block next">
+        <div id="nextLabel" class="label"></div>
+        <div id="nextTime" class="time"></div>
+      </div>
+    </section>
+
+    <section class="dash">
+      <div class="stat">
+        <div id="leftNum" class="num blue"></div>
+        <div id="leftLbl" class="lbl"></div>
+      </div>
+      <button id="playBtn" class="play" aria-label="Start">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="ring-track" cx="50" cy="50" r="44"></circle>
+          <circle id="ring" class="ring" cx="50" cy="50" r="44" pathLength="100"></circle>
+        </svg>
+        <span id="playIcon" class="icon play-icon"></span>
+        <span id="playLbl" class="lbl hi"></span>
+      </button>
+      <div class="stat">
+        <div id="rightNum" class="num hi"></div>
+        <div id="rightLbl" class="lbl"></div>
+      </div>
+    </section>
+
+    <nav class="nav">
+      <button id="prevBtn" class="btn" aria-label="Previous step">◀</button>
+      <select id="stepSelect" aria-label="Jump to step"></select>
+      <button id="nextBtn" class="btn" aria-label="Next step">▶</button>
+      <button id="stopBtn" class="btn">■ Stop</button>
+    </nav>
+
+    <div class="toggles">
+      <label><input type="checkbox" id="tSound"> Sound</label>
+      <label><input type="checkbox" id="tVoice"> Voice</label>
+      <label><input type="checkbox" id="tTicks"> Ticks</label>
+      <button id="libraryBtn" class="btn small">Library</button>
+    </div>
+  </div>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-panel">
+      <div id="sheetBody" class="sheet-body"></div>
+      <div id="sheetButtons" class="sheet-buttons"></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mobility tests</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; background: #141414; color: #eee; padding: 16px; }
+    .pass { color: #9cf54a; } .fail { color: #ff7a7a; } pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Mobility tests</h1>
+  <div id="out"></div>
+  <script type="module">
+    import { TRACKS, EXERCISES, SOURCES, MAX_LEVEL, exerciseFor } from "./js/data.js";
+    import { SESSIONS, SWITCH_REST, buildPlan, buildSegments } from "./js/plan.js";
+    import * as store from "./js/store.js";
+    import { Engine, FINISHED } from "../js/engine.js";
+
+    const eq = (a, b, msg = "") => {
+      if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${msg} expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+    };
+    const ok = (cond, msg) => { if (!cond) throw new Error(msg); };
+    const cfg = (o = {}) => ({ ...store.normaliseConfig(null), ...o });
+    const fresh = () => store.normaliseLevels(null);
+    const fakeClock = () => { const c = () => c.t; c.t = 0; return c; };
+
+    const tests = {
+      "12 tracks covering hip, spine and hamstring directions, 4 levels each"() {
+        eq(TRACKS.length, 12);
+        eq(EXERCISES.length, 12 * MAX_LEVEL);
+        for (const t of TRACKS) for (let l = 1; l <= MAX_LEVEL; l++) ok(exerciseFor(t.id, l), `missing ${t.id} level ${l}`);
+        const names = TRACKS.map((t) => `${t.region}:${t.name}`);
+        for (const n of ["hip:Flexion", "hip:Extension", "hip:Abduction", "hip:Adduction", "hip:External rotation", "hip:Internal rotation",
+                         "spine:Flexion", "spine:Extension", "spine:Lateral flexion", "spine:Rotation"])
+          ok(names.includes(n), `no track for ${n}`);
+        eq(TRACKS.filter((t) => t.region === "ham").length, 2);
+      },
+      "every exercise has steps, a benchmark, a caution and a valid dose"() {
+        for (const e of EXERCISES) {
+          ok(e.steps.length >= 3 && e.benchmark && e.caution && e.cue && e.alt, `missing text for ${e.name}`);
+          ok(SOURCES.includes(e.source), `${e.name}: source ${e.source}`);
+          ok(Number.isInteger(e.dose) && e.dose > 0, `${e.name}: dose`);
+          ok(e.mode === "hold" || (e.mode === "reps" && e.rep > 0), `${e.name}: mode`);
+        }
+        for (const s of SOURCES) ok(EXERCISES.some((e) => e.source === s), `no ${s} exercises`);
+      },
+      "sessions use each track's current level; sided exercises run left then right"() {
+        const levels = store.setLevel(fresh(), "hipExt", 3);
+        const p = buildPlan(cfg({ session: "hips" }), levels);
+        eq(p.tracks, SESSIONS.hips.tracks);
+        const ext = p.steps.filter((s) => s.track === "hipExt");
+        eq(ext.map((s) => [s.ex.level, s.side]), [[3, "Left"], [3, "Right"]]);
+        eq(buildPlan(cfg(), fresh()).tracks.length, 12);
+        eq(SESSIONS.hips.tracks.length + SESSIONS.back.tracks.length, 12);
+      },
+      "segments add up to the plan total; side switches are 5 s"() {
+        const p = buildPlan(cfg({ transition: 20 }), fresh());
+        const segs = buildSegments(p, 10, 0);
+        eq(segs.reduce((a, s) => a + s.duration, 0), p.total);
+        const i = p.steps.findIndex((s) => s.ex.sides);
+        eq(segs.find((s) => s.kind === "rest" && s.step === i).duration, SWITCH_REST);
+        eq(segs.find((s) => s.kind === "rest" && s.step === i + 1).duration, 20);
+        ok(p.total > 15 * 60 && p.total < 40 * 60, `full session at level 1 is ${p.total}s`);
+      },
+      "excluded tracks are left out; excluding everything falls back"() {
+        const p = buildPlan(cfg({ session: "back", excluded: ["spExt"] }), fresh());
+        ok(!p.tracks.includes("spExt"), "still included");
+        eq(p.tracks.length, 5);
+        eq(buildPlan(cfg({ session: "back", excluded: SESSIONS.back.tracks }), fresh()).tracks.length, 6);
+      },
+      "benchmarks met in enough sessions in a row move a track up"() {
+        let lv = fresh();
+        let r;
+        for (let i = 0; i < 2; i++) ({ levels: lv } = store.applyCheckIn(lv, { hipER: "met" }, 3));
+        eq([lv.hipER.level, lv.hipER.met], [1, 2]);
+        r = store.applyCheckIn(lv, { hipER: "met" }, 3);
+        eq([r.levels.hipER.level, r.levels.hipER.met], [2, 0]);
+        eq(r.changes, [{ track: "hipER", from: 1, to: 2, kind: "up" }]);
+      },
+      "'not yet' resets the count; 'too hard' steps back a level"() {
+        let lv = store.setLevel(fresh(), "spRot", 3);
+        ({ levels: lv } = store.applyCheckIn(lv, { spRot: "met" }, 3));
+        ({ levels: lv } = store.applyCheckIn(lv, { spRot: "not" }, 3));
+        eq([lv.spRot.level, lv.spRot.met], [3, 0]);
+        const r = store.applyCheckIn(lv, { spRot: "hard", spFlex: "hard" }, 3);
+        eq([r.levels.spRot.level, r.levels.spFlex.level], [2, 1]);
+        eq(r.changes.map((c) => c.kind), ["down"]);
+      },
+      "the top level is mastered, and the score reaches 100%"() {
+        let lv = fresh();
+        eq(store.score(lv), 0);
+        for (const t of TRACKS) lv = store.setLevel(lv, t.id, MAX_LEVEL);
+        eq(store.score(lv), 75);
+        const all = Object.fromEntries(TRACKS.map((t) => [t.id, "met"]));
+        for (let i = 0; i < 2; i++) ({ levels: lv } = store.applyCheckIn(lv, all, 2));
+        ok(TRACKS.every((t) => lv[t.id].mastered && lv[t.id].level === MAX_LEVEL), "not mastered");
+        eq(store.score(lv), 100);
+      },
+      "a full session runs to the finish on the clock"() {
+        const p = buildPlan(cfg(), fresh());
+        const clock = fakeClock();
+        let finished = 0, holds = 0;
+        const eng = new Engine({ clock, cue: (ev, seg) => { if (ev === "finished") finished++; if (ev === "segment" && seg.kind === "hold") holds++; } });
+        eng.load(buildSegments(p, 10, 0));
+        eng.start();
+        while (eng.state !== FINISHED && clock.t < 4000) { clock.t += 0.1; eng.tick(); }
+        eq(finished, 1);
+        ok(Math.abs(clock.t - p.total) < 0.2, `finished at ${clock.t}, planned ${p.total}`);
+        ok(holds > 5, "too few holds");
+      },
+      "settings and levels are validated"() {
+        const c = store.normaliseConfig({ session: "legs", transition: 7, toProgress: 9, prepare: 500, excluded: ["hipER", "x"], theme: "pink" });
+        eq([c.session, c.transition, c.toProgress, c.prepare, c.excluded, c.theme], ["full", 15, 3, 10, ["hipER"], "dark"]);
+        const l = store.normaliseLevels({ hipER: { level: 9, met: -1 }, spExt: { level: 4, met: 2, mastered: true }, hipIR: { level: 2, mastered: true } });
+        eq([l.hipER, l.spExt, l.hipIR], [{ level: 1, met: 0, mastered: false }, { level: 4, met: 2, mastered: true }, { level: 2, met: 0, mastered: false }]);
+      },
+      "streak, week and level-up counts"() {
+        const now = new Date(2026, 10, 21, 12); // Saturday
+        const at = (d) => new Date(2026, 10, d, 8).toISOString();
+        const hist = [
+          { id: "a", start: at(17), seconds: 900, planned: [], done: [], changes: [{ kind: "up" }] },
+          { id: "b", start: at(19), seconds: 600, planned: [], done: [], changes: [{ kind: "down" }] },
+          { id: "c", start: at(20), seconds: 1500, planned: [], done: [], changes: [{ kind: "up" }, { kind: "up" }] },
+          { id: "d", start: at(21), seconds: 1500, planned: [], done: [] },
+        ];
+        const s = store.stats(hist, now);
+        eq([s.streak, s.week, s.sessions, s.minutes, s.levelUps], [3, 4, 4, 75, 3]);
+      },
+      "backups are checked"() {
+        let threw = false;
+        try { store.readBackup({ app: "pilates-timer" }); } catch { threw = true; }
+        ok(threw, "accepted a foreign file");
+        const b = store.readBackup({ app: "mobility", config: { session: "hips" }, levels: { hipER: { level: 3, met: 1 } },
+          history: [{ id: "x", start: "2026-01-01T00:00:00Z", seconds: 5, planned: [], done: [] }, { bad: 1 }] });
+        eq([b.config.session, b.levels.hipER.level, b.history.length], ["hips", 3, 1]);
+      },
+      async "the offline cache lists every app file"() {
+        const sw = await (await fetch("sw.js")).text();
+        for (const f of ["js/app.js", "js/data.js", "js/plan.js", "js/store.js", "mobility.css", "../js/engine.js", "../js/sound.js", "../js/workout.js"]) {
+          ok(sw.includes(`"${f}"`), `${f} missing from sw.js`);
+          ok((await fetch(f)).ok, `${f} not found`);
+        }
+      },
+    };
+
+    const out = document.getElementById("out");
+    let failed = 0;
+    for (const [name, fn] of Object.entries(tests)) {
+      try {
+        await fn();
+        out.insertAdjacentHTML("beforeend", `<div class="pass">PASS ${name}</div>`);
+      } catch (e) {
+        failed++;
+        out.insertAdjacentHTML("beforeend", `<div class="fail">FAIL ${name}<pre>${e.message}</pre></div>`);
+      }
+    }
+    out.insertAdjacentHTML("beforeend", `<h2 class="${failed ? "fail" : "pass"}">${Object.keys(tests).length - failed} passed, ${failed} failed</h2>`);
+    document.title = failed ? "FAILED" : "PASSED";
+  </script>
+</body>
+</html>

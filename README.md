@@ -117,3 +117,56 @@ Then open http://localhost:8765/pilates/ for the app, or http://localhost:8765/p
 | `pilates/tests.html` | Browser tests |
 
 The instructions and cautions are short coaching notes. Seek medical advice before starting if you have an injury, osteoporosis or are pregnant; the advanced exercises load the neck and spine.
+
+---
+
+# Mobility (the `mobility` folder)
+
+A third app in the same site: guided hip, spine and hamstring mobility sessions that get harder as you meet benchmarks. Exercises are drawn from yoga, Pilates and rehabilitation exercise. It uses the Stretch Timer's timer engine, wood-block sounds and styles, so it is uploaded alongside the Stretch Timer files.
+
+## Opening it
+
+After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobility/`. Open that address in Safari and use **Share → Add to Home Screen**. It gets its own icon and works offline.
+
+## What it does
+
+1. **12 movement tracks**, each a ladder of 4 levels:
+
+   | Region | Tracks |
+   |---|---|
+   | Hip | Flexion, extension, abduction (adductor length), adduction (inner-thigh strength), external rotation, internal rotation |
+   | Spine | Flexion, extension, lateral flexion, rotation |
+   | Hamstrings | Active and loaded (nerve glide → Nordic lowers), length (strap stretch → half splits) |
+
+2. **Sessions:** tap the title at the top (or Settings) to choose *Full* (all 12 tracks, about 18 minutes at level 1), *Hips* or *Spine + Hamstrings*. Each track contributes the exercise at your current level. One-sided exercises run left, then right.
+3. **Benchmarks:** every exercise has a benchmark shown on the main screen, for example *"Straight leg reaches 80° or more with the other leg flat, 45 s each side."* Tap the card for steps and cautions.
+4. **Check-in and progression:** at the end of a session (or after **■ Stop** if any exercise was finished), mark each exercise:
+   - **Met:** benchmark achieved at the full dose. Meeting it in 3 sessions in a row moves the track up a level (Settings → Progression: 2, 3 or 4 sessions). At level 4 it marks the track *mastered*.
+   - **Not yet:** the count starts again at this level.
+   - **Too hard:** pain, or it could not be done with control. The track steps back a level.
+   Choose **Later** to check in from Progress afterwards (most recent session only).
+5. **Library:** all 48 exercises by track, with their source (yoga, Pilates or rehab). From an exercise's page you can choose that level manually, or exclude the whole track from sessions (for example, for an injury).
+6. **Progress:** mobility score (levels gained across all tracks; 100% = every track mastered at level 4), sessions this week, day streak, level ups, a ladder for every track, and recent sessions.
+7. **Backup:** Settings → Backup → *Export* saves settings, levels and history to a file; *Import* loads it on another phone. *Reset levels* returns every track to level 1.
+
+## Testing on your computer
+
+```bash
+python3 -m http.server 8765
+```
+
+Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/mobility/tests.html to run its 13 tests.
+
+## Files
+
+| File | What it is |
+|---|---|
+| `mobility/index.html`, `mobility/mobility.css` | The page; it also uses the Stretch Timer's `styles.css` and font |
+| `mobility/js/data.js` | The 12 tracks and 48 exercises: source, dose, steps, benchmark and caution |
+| `mobility/js/plan.js` | Builds a session from your levels and turns it into timed segments |
+| `mobility/js/store.js` | Settings, levels, the progression rules, history and progress figures |
+| `mobility/js/app.js` | The screen, check-in, Settings, Library and Progress |
+| `mobility/sw.js`, `mobility/manifest.webmanifest`, `mobility/icons/` | Installable and offline. Raise `VERSION` in `mobility/sw.js` when you change its files. |
+| `mobility/tests.html` | Browser tests |
+
+Stretch to mild tension, never pain. Stop any exercise that causes sharp, pinching or nerve-like pain and mark it *Too hard*. Seek medical advice before starting if you have an injury, recent surgery, osteoporosis or hypermobility, or are pregnant.

@@ -1,97 +1,157 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en-AU" data-theme="dark">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <title>Stretch Timer</title>
-  <meta name="description" content="Guided stretching and tempo workout timer">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Training</title>
+  <meta name="description" content="Stretch Timer, Pilates Mat and Mobility in one app">
   <meta name="theme-color" content="#141414">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Stretch Timer">
+  <meta name="apple-mobile-web-app-title" content="Training">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
-  <script type="module" src="js/app.js"></script>
+  <style>
+    .home {
+      max-width: 560px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      padding: calc(env(safe-area-inset-top) + 18px) 16px max(16px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .home h1 {
+      margin: 0 0 4px;
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: 44px;
+      line-height: 1;
+      color: var(--hi);
+    }
+    .home .sub {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .app-card {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      background: var(--card);
+      border-radius: 14px;
+      color: var(--fg);
+      text-decoration: none;
+    }
+    .app-card:active { background: var(--raised); }
+    .app-card img {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      display: block;
+    }
+    .app-card b {
+      display: block;
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: 28px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    .app-card p {
+      margin: 4px 0 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .app-card .status {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--work);
+    }
+    .app-card .chev {
+      font-size: 26px;
+      color: var(--hi);
+    }
+    .last {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--accent);
+      color: var(--accent-fg);
+      font-family: var(--body);
+      font-size: 11px;
+      vertical-align: middle;
+    }
+    .note {
+      margin-top: auto;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <header class="top">
-      <button id="settingsBtn" class="corner" aria-label="Settings">
-        <span class="grid9"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
-        <small>Settings</small>
-      </button>
-      <button id="programBtn" class="program" aria-haspopup="menu" aria-expanded="false">
-        <span class="program-name"><span id="programName"></span><span class="caret"></span></span>
-        <span id="timeLeft" class="time-left"></span>
-      </button>
-      <button id="themeBtn" class="corner" aria-label="Switch theme">
-        <span class="halfmoon"></span>
-        <small id="themeLbl">Light</small>
-      </button>
-    </header>
-    <div id="programMenu" class="menu" role="menu" hidden></div>
+  <main class="home">
+    <h1>TRAINING</h1>
+    <p class="sub">Choose an app. Tap the title at the top of any app to switch back.</p>
+    <div id="apps"></div>
+    <p class="note">Each app keeps its own settings and history on this phone.</p>
+  </main>
+  <script type="module">
+    import { APPS, appUrl, lastApp } from "./js/apps.js";
 
-    <section class="info">
-      <h1 id="exName"></h1>
-      <div id="exDetail" class="detail"></div>
-      <p id="exCue" class="cue"></p>
-    </section>
+    const fmtDate = (iso) => new Date(iso).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
+    const readList = (key) => {
+      try {
+        const v = JSON.parse(localStorage.getItem(key));
+        return Array.isArray(v) ? v : [];
+      } catch {
+        return [];
+      }
+    };
+    const lastSession = (key) => {
+      const list = readList(key).filter((s) => s && !Number.isNaN(Date.parse(s.start)));
+      return list.length ? `Last session ${fmtDate(list[list.length - 1].start)} · ${list.length} in total` : "";
+    };
 
-    <section id="tempo" class="tempo" aria-label="Tempo"></section>
+    // A line of progress for apps that keep a history.
+    async function status(key) {
+      if (key === "pilates") return lastSession("pilates-timer:history");
+      if (key === "mobility") {
+        const line = lastSession("mobility:history");
+        try {
+          const store = await import("./mobility/js/store.js");
+          return [line, `Mobility score ${store.score(store.loadLevels())}%`].filter(Boolean).join(" · ");
+        } catch {
+          return line;
+        }
+      }
+      return "";
+    }
 
-    <section class="stage">
-      <div id="mainBlock" class="block main">
-        <div id="mainLabel" class="label"></div>
-        <div id="mainTime" class="time"></div>
-        <div id="mainBar" class="bar"></div>
-      </div>
-      <div id="nextBlock" class="block next">
-        <div id="nextLabel" class="label"></div>
-        <div id="nextTime" class="time"></div>
-      </div>
-    </section>
+    const last = lastApp();
+    const box = document.getElementById("apps");
+    box.style.cssText = "display:flex;flex-direction:column;gap:10px";
+    for (const app of APPS) {
+      const a = document.createElement("a");
+      a.className = "app-card";
+      a.href = appUrl(app.path);
+      a.innerHTML = `<img src="${app.icon}" alt=""><div><b></b><p></p><div class="status"></div></div><span class="chev">›</span>`;
+      a.querySelector("b").textContent = app.name;
+      if (app.key === last) a.querySelector("b").insertAdjacentHTML("beforeend", '<span class="last">Last used</span>');
+      a.querySelector("p").textContent = app.blurb;
+      status(app.key).then((t) => { a.querySelector(".status").textContent = t; });
+      box.append(a);
+    }
 
-    <section class="dash">
-      <div class="stat">
-        <div id="leftNum" class="num blue"></div>
-        <div id="leftLbl" class="lbl"></div>
-      </div>
-      <button id="playBtn" class="play" aria-label="Start">
-        <svg viewBox="0 0 100 100" aria-hidden="true">
-          <circle class="ring-track" cx="50" cy="50" r="44"></circle>
-          <circle id="ring" class="ring" cx="50" cy="50" r="44" pathLength="100"></circle>
-        </svg>
-        <span id="playIcon" class="icon play-icon"></span>
-        <span id="playLbl" class="lbl hi"></span>
-      </button>
-      <div class="stat">
-        <div id="rightNum" class="num hi"></div>
-        <div id="rightLbl" class="lbl"></div>
-      </div>
-    </section>
-
-    <nav class="nav">
-      <button id="prevBtn" class="btn" aria-label="Previous step">◀</button>
-      <select id="stepSelect" aria-label="Jump to step"></select>
-      <button id="nextBtn" class="btn" aria-label="Next step">▶</button>
-      <button id="stopBtn" class="btn">■ Stop</button>
-    </nav>
-
-    <div class="toggles">
-      <label><input type="checkbox" id="tSound"> Sound</label>
-      <label><input type="checkbox" id="tVoice"> Voice</label>
-      <label><input type="checkbox" id="tTicks"> Ticks</label>
-    </div>
-  </div>
-
-  <div id="sheet" class="sheet" hidden>
-    <div class="sheet-panel">
-      <div id="sheetBody" class="sheet-body"></div>
-      <div id="sheetButtons" class="sheet-buttons"></div>
-    </div>
-  </div>
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+  </script>
 </body>
 </html>

@@ -1,11 +1,21 @@
 // Offline support: cache the app files, serve from cache, refresh in the background.
 // Bump VERSION whenever you upload changed files so phones pick up the new version.
-const VERSION = "stretch-timer-v2";
+const VERSION = "stretch-timer-v3";
+const PILATES_IMAGES = ["hundred", "rollup", "rollover", "legcircle", "rollingball", "singleleg", "doubleleg", "spinestretch",
+  "openrocker", "corkscrew", "saw", "swan", "singlekick", "doublekick", "neckpull", "scissors", "bicycle",
+  "bridge", "spinetwist", "jackknife", "sidekick", "teaser", "hiptwist", "swimming", "legpullfront",
+  "legpullback", "kneelingkick", "sidebend", "boomerang", "seal", "crab", "rocking", "controlbalance", "pushup"];
+// The launcher and all three apps, so the combined app works offline from the first visit.
 const FILES = [
-  "./", "index.html", "styles.css", "manifest.webmanifest",
-  "js/app.js", "js/engine.js", "js/programs.js", "js/sound.js", "js/store.js", "js/workout.js",
+  "./", "index.html", "timer.html", "styles.css", "manifest.webmanifest",
+  "js/app.js", "js/apps.js", "js/engine.js", "js/programs.js", "js/sound.js", "js/store.js", "js/workout.js",
   "fonts/BebasNeue-Bold.otf",
   "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png",
+  "pilates/", "pilates/index.html", "pilates/pilates.css", "pilates/manifest.webmanifest",
+  "pilates/js/app.js", "pilates/js/data.js", "pilates/js/plan.js", "pilates/js/store.js", "pilates/icons/icon-192.png",
+  ...PILATES_IMAGES.map((k) => `pilates/img/${k}.jpg`),
+  "mobility/", "mobility/index.html", "mobility/mobility.css", "mobility/manifest.webmanifest",
+  "mobility/js/app.js", "mobility/js/data.js", "mobility/js/plan.js", "mobility/js/store.js", "mobility/icons/icon-192.png",
 ];
 
 self.addEventListener("install", (e) => {

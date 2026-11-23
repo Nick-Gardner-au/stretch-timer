@@ -3,6 +3,7 @@
 
 import { Engine, RUNNING, PAUSED, STOPPED, FINISHED } from "../../js/engine.js";
 import { Player } from "../../js/sound.js";
+import { switcherItems, rememberApp } from "../../js/apps.js";
 import * as store from "./store.js";
 import { TRACKS, TRACK_BY_ID, REGIONS, MAX_LEVEL, exerciseFor, trackTitle, doseText } from "./data.js";
 import { SESSIONS, TRANSITIONS, buildPlan, buildSegments, stepTitle } from "./plan.js";
@@ -186,7 +187,7 @@ class App {
       const on = key === this.cfg.session;
       return h("button", { role: "menuitemradio", "aria-checked": String(on), onclick: () => { this.closeSessionMenu(); this.setSession(key); } },
         h("span", { class: `dot${on ? " on" : ""}` }), `${s.title} · ${p.tracks.length} exercises · ${fmtMinutes(p.total)}`);
-    }));
+    }), ...switcherItems("mobility", () => this.isActive()));
     menu.hidden = false;
     $("sessionBtn").setAttribute("aria-expanded", "true");
   }
@@ -802,6 +803,7 @@ class App {
 }
 
 window.mobilityApp = new App();
+rememberApp("mobility");
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});

@@ -1,7 +1,7 @@
 {
   "name": "training-desktop",
   "productName": "Training",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Stretch Timer, Pilates Mat and Mobility as a Linux desktop app",
   "homepage": "https://github.com/Nick-Gardner-au/stretch-timer",
   "repository": {
@@ -42,6 +42,10 @@
       "category": "Utility",
       "maintainer": "Training"
     },
-    "publish": null
+    "publish": null,
+    "deb": {
+      "afterInstall": "build/linux/after-install.sh",
+      "afterRemove": "build/linux/after-remove.sh"
+    }
   }
 }

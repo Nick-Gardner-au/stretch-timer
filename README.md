@@ -189,10 +189,12 @@ The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a 
 
 Use either file from a build (see below):
 
-1. **AppImage** (any distribution): `chmod +x Training-1.0.0.AppImage`, then run `./Training-1.0.0.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
-2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ./training-desktop_1.0.0_amd64.deb`. Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+1. **AppImage** (any distribution): `chmod +x Training-1.0.1.AppImage`, then run `./Training-1.0.1.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.1_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
-If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `sudo apt install libfuse2` (Ubuntu 24.04: `libfuse2t64`).
+The .deb installs an AppArmor profile (`/etc/apparmor.d/training-desktop`) that Ubuntu 23.10 and later need before Electron apps can start; removing the package removes it.
+
+If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `sudo apt install libfuse2` (Ubuntu 24.04: `libfuse2t64`). On Ubuntu 23.10 and later it also needs to be started with `--no-sandbox`, because the AppArmor profile only covers the installed .deb; prefer the .deb there.
 
 ## Getting a build
 

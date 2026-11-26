@@ -1,4 +1,4 @@
-// Training desktop app: runs the Stretch Timer, Pilates Mat and Mobility web apps in their own window.
+// Training desktop app (Linux): runs the Stretch Timer, Pilates Mat and Mobility web apps in their own window.
 // The web files are bundled in ./web (copied from the repository root by scripts/copy-web.js) and served
 // through an app:// scheme, because ES modules and localStorage do not work reliably from file:// pages.
 

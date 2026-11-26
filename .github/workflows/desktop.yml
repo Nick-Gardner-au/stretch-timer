@@ -1,6 +1,6 @@
-# Builds the Training desktop app for Windows, macOS and Linux.
+# Builds the Training desktop app for Linux (AppImage and .deb).
 # Run it from the Actions tab (Run workflow), or push a tag such as desktop-v1.0.0 to also
-# publish the installers on a GitHub Release.
+# publish the files on a GitHub Release.
 name: Desktop app
 
 on:
@@ -13,22 +13,10 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            script: dist:win
-          - os: macos-latest
-            script: dist:mac
-          - os: ubuntu-latest
-            script: dist:linux
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: desktop
-    env:
-      CSC_IDENTITY_AUTO_DISCOVERY: "false" # unsigned builds
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,13 +25,11 @@ jobs:
           cache: npm
           cache-dependency-path: desktop/package-lock.json
       - run: npm ci
-      - run: npm run ${{ matrix.script }} -- --publish never
+      - run: npm run dist:linux -- --publish never
       - uses: actions/upload-artifact@v4
         with:
-          name: training-${{ matrix.os }}
+          name: training-linux
           path: |
-            desktop/dist/*.exe
-            desktop/dist/*.dmg
             desktop/dist/*.AppImage
             desktop/dist/*.deb
           if-no-files-found: error
@@ -51,7 +37,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            desktop/dist/*.exe
-            desktop/dist/*.dmg
             desktop/dist/*.AppImage
             desktop/dist/*.deb

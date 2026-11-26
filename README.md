@@ -183,32 +183,30 @@ Stretch to mild tension, never pain. Stop any exercise that causes sharp, pinchi
 
 # Desktop app (the `desktop` folder)
 
-The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a desktop app for Windows, macOS and Linux. It opens in its own window, works offline and keeps its own settings and history (separate from the phone).
+The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a Linux desktop app. It opens in its own window, works offline and keeps its own settings and history (separate from the phone).
 
-## Getting the installers
+## Installing
 
-GitHub builds them for you:
+Use either file from a build (see below):
 
-1. In the repository on github.com, open **Actions → Desktop app → Run workflow**.
-2. When the run finishes (about 10 minutes), open it and download the file for your computer under **Artifacts**:
-   1. `training-windows-latest`: `Training-1.0.0-setup.exe` (installer) or `Training-1.0.0-portable.exe` (runs without installing).
-   2. `training-macos-latest`: `Training-1.0.0-arm64.dmg` (Apple silicon) or `Training-1.0.0.dmg` (Intel).
-   3. `training-ubuntu-latest`: `Training-1.0.0.AppImage` (any distribution) or `training-desktop_1.0.0_amd64.deb` (Debian, Ubuntu).
+1. **AppImage** (any distribution): `chmod +x Training-1.0.0.AppImage`, then run `./Training-1.0.0.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ./training-desktop_1.0.0_amd64.deb`. Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
-To publish them on a Releases page instead, push a tag such as `desktop-v1.0.0`.
+If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `sudo apt install libfuse2` (Ubuntu 24.04: `libfuse2t64`).
 
-The installers are not code-signed, so the first launch shows a warning:
+## Getting a build
 
-1. **Windows:** "Windows protected your PC" → **More info → Run anyway**.
-2. **macOS:** drag Training into Applications, then right-click it → **Open → Open**. If macOS says the app is damaged, run `xattr -cr /Applications/Training.app` in Terminal once.
-3. **Linux AppImage:** make it executable (`chmod +x Training-1.0.0.AppImage`), then run it.
+1. On github.com, open **Actions → Desktop app → Run workflow**. When it finishes (about 5 minutes), download `training-linux` under **Artifacts**.
+2. Or push a tag such as `desktop-v1.0.0` to publish the files on a Releases page.
+3. Or build it yourself (below).
 
 ## Using it
 
-1. **Apps** menu: All apps (Ctrl/Cmd+0), Stretch Timer (1), Pilates Mat (2), Mobility (3). It asks before leaving a running workout. The title menu inside each app switches apps as on the phone.
+1. **Apps** menu: All apps (Ctrl+0), Stretch Timer (Ctrl+1), Pilates Mat (Ctrl+2), Mobility (Ctrl+3). It asks before leaving a running workout. The title menu inside each app switches apps as on the phone.
 2. The window can be resized; **View** has zoom and full screen.
-3. Space starts and pauses, ◀ ▶ arrow keys move between exercises, Esc stops.
+3. Space starts and pauses, the ◀ ▶ arrow keys move between exercises, Esc stops.
 4. Backups: Export on the phone and Import on the desktop (or the other way round) to move history and levels across.
+5. Voice cues use the system speech engine. If there is no voice, install it with `sudo apt install speech-dispatcher espeak-ng`.
 
 ## Building it yourself
 
@@ -218,15 +216,15 @@ Needs [Node.js](https://nodejs.org) 20 or later.
 cd desktop
 npm install
 npm start            # run it
-npm run dist:linux   # or dist:win / dist:mac on that system; output goes to desktop/dist
+npm run dist         # AppImage and .deb in desktop/dist
 ```
 
-`npm start` and the build scripts copy the web app from the repository root into `desktop/web` first, so changes to the phone app are picked up by the next desktop build.
+`npm start` and `npm run dist` copy the web app from the repository root into `desktop/web` first, so changes to the phone app are picked up by the next desktop build.
 
 | File | What it is |
 |---|---|
 | `desktop/main.js` | Opens the window, serves the bundled web app and builds the Apps menu |
 | `desktop/scripts/copy-web.js` | Copies the web app into `desktop/web` before running or building |
-| `desktop/package.json` | Electron and installer settings |
+| `desktop/package.json` | Electron and package settings |
 | `desktop/build/icon.png` | App icon |
-| `.github/workflows/desktop.yml` | Builds the Windows, macOS and Linux installers on GitHub |
+| `.github/workflows/desktop.yml` | Builds the AppImage and .deb on GitHub |

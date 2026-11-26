@@ -178,3 +178,55 @@ Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/
 | `mobility/tests.html` | Browser tests |
 
 Stretch to mild tension, never pain. Stop any exercise that causes sharp, pinching or nerve-like pain and mark it *Too hard*. Seek medical advice before starting if you have an injury, recent surgery, osteoporosis or hypermobility, or are pregnant.
+
+---
+
+# Desktop app (the `desktop` folder)
+
+The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a desktop app for Windows, macOS and Linux. It opens in its own window, works offline and keeps its own settings and history (separate from the phone).
+
+## Getting the installers
+
+GitHub builds them for you:
+
+1. In the repository on github.com, open **Actions → Desktop app → Run workflow**.
+2. When the run finishes (about 10 minutes), open it and download the file for your computer under **Artifacts**:
+   1. `training-windows-latest`: `Training-1.0.0-setup.exe` (installer) or `Training-1.0.0-portable.exe` (runs without installing).
+   2. `training-macos-latest`: `Training-1.0.0-arm64.dmg` (Apple silicon) or `Training-1.0.0.dmg` (Intel).
+   3. `training-ubuntu-latest`: `Training-1.0.0.AppImage` (any distribution) or `training-desktop_1.0.0_amd64.deb` (Debian, Ubuntu).
+
+To publish them on a Releases page instead, push a tag such as `desktop-v1.0.0`.
+
+The installers are not code-signed, so the first launch shows a warning:
+
+1. **Windows:** "Windows protected your PC" → **More info → Run anyway**.
+2. **macOS:** drag Training into Applications, then right-click it → **Open → Open**. If macOS says the app is damaged, run `xattr -cr /Applications/Training.app` in Terminal once.
+3. **Linux AppImage:** make it executable (`chmod +x Training-1.0.0.AppImage`), then run it.
+
+## Using it
+
+1. **Apps** menu: All apps (Ctrl/Cmd+0), Stretch Timer (1), Pilates Mat (2), Mobility (3). It asks before leaving a running workout. The title menu inside each app switches apps as on the phone.
+2. The window can be resized; **View** has zoom and full screen.
+3. Space starts and pauses, ◀ ▶ arrow keys move between exercises, Esc stops.
+4. Backups: Export on the phone and Import on the desktop (or the other way round) to move history and levels across.
+
+## Building it yourself
+
+Needs [Node.js](https://nodejs.org) 20 or later.
+
+```bash
+cd desktop
+npm install
+npm start            # run it
+npm run dist:linux   # or dist:win / dist:mac on that system; output goes to desktop/dist
+```
+
+`npm start` and the build scripts copy the web app from the repository root into `desktop/web` first, so changes to the phone app are picked up by the next desktop build.
+
+| File | What it is |
+|---|---|
+| `desktop/main.js` | Opens the window, serves the bundled web app and builds the Apps menu |
+| `desktop/scripts/copy-web.js` | Copies the web app into `desktop/web` before running or building |
+| `desktop/package.json` | Electron and installer settings |
+| `desktop/build/icon.png` | App icon |
+| `.github/workflows/desktop.yml` | Builds the Windows, macOS and Linux installers on GitHub |

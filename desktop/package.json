@@ -1,0 +1,75 @@
+{
+  "name": "training-desktop",
+  "productName": "Training",
+  "version": "1.0.0",
+  "description": "Stretch Timer, Pilates Mat and Mobility as a desktop app",
+  "homepage": "https://github.com/Nick-Gardner-au/stretch-timer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nick-Gardner-au/stretch-timer.git"
+  },
+  "author": "Training",
+  "main": "main.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "copy-web": "node scripts/copy-web.js",
+    "start": "npm run copy-web && electron .",
+    "dist": "npm run copy-web && electron-builder",
+    "dist:linux": "npm run copy-web && electron-builder --linux",
+    "dist:win": "npm run copy-web && electron-builder --win",
+    "dist:mac": "npm run copy-web && electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "app.stretchtimer.training",
+    "productName": "Training",
+    "files": [
+      "main.js",
+      "web/**/*",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "maintainer": "Training"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-${version}-setup.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.healthcare-fitness"
+    },
+    "publish": null,
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
+  }
+}

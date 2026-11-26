@@ -5,6 +5,7 @@
 const { app, BrowserWindow, Menu, protocol, net, shell, session, dialog } = require("electron");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
+const fs = require("node:fs");
 
 const WEB_ROOT = path.join(__dirname, "web");
 const HOST = "training";
@@ -28,18 +29,67 @@ function serveFiles() {
   });
 }
 
+// ---------- window size, full screen and scaling ----------
+// The layout was designed for 1600 x 900 in landscape; larger windows (full screen on a big monitor)
+// scale it up so text and buttons stay in proportion. Ctrl+= / Ctrl+- adjust on top of that.
+const DESIGN = { width: 1600, height: 900 };
+const stateFile = () => path.join(app.getPath("userData"), "window-state.json");
+let userZoom = 1;
+
+function loadState() {
+  try {
+    return JSON.parse(fs.readFileSync(stateFile(), "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function saveState(win) {
+  try {
+    const state = { bounds: win.getNormalBounds(), maximized: win.isMaximized(), fullScreen: win.isFullScreen(), userZoom };
+    fs.writeFileSync(stateFile(), JSON.stringify(state));
+  } catch {
+    // not saved; defaults next time
+  }
+}
+
+function applyZoom(win) {
+  const [w, h] = win.getContentSize();
+  const auto = Math.max(1, Math.min(w / DESIGN.width, h / DESIGN.height));
+  win.webContents.setZoomFactor(Math.round(auto * userZoom * 100) / 100);
+}
+
+function setUserZoom(win, value) {
+  userZoom = Math.min(2, Math.max(0.6, Math.round(value * 10) / 10));
+  applyZoom(win);
+}
+
 function createWindow() {
+  const state = loadState();
+  userZoom = Number.isFinite(state.userZoom) ? state.userZoom : 1;
+  const b = state.bounds || {};
   const win = new BrowserWindow({
-    width: 480,
-    height: 900,
+    width: b.width || 1280,
+    height: b.height || 800,
+    x: b.x,
+    y: b.y,
     minWidth: 360,
-    minHeight: 640,
+    minHeight: 600,
     title: "Training",
     backgroundColor: "#141414",
     icon: path.join(__dirname, "build", "icon.png"),
     autoHideMenuBar: true,
+    show: false,
     webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false },
   });
+  if (state.maximized) win.maximize();
+  if (state.fullScreen) win.setFullScreen(true);
+  win.once("ready-to-show", () => win.show());
+
+  for (const ev of ["resize", "enter-full-screen", "leave-full-screen", "maximize", "unmaximize"]) win.on(ev, () => applyZoom(win));
+  win.webContents.on("did-finish-load", () => applyZoom(win));
+  win.on("close", () => saveState(win));
+
   // Links to other sites open in the normal browser; the app stays on its own pages.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (!url.startsWith("app://")) shell.openExternal(url);
@@ -80,9 +130,16 @@ function buildMenu() {
     ] },
     { role: "editMenu" },
     { label: "View", submenu: [
-      { role: "reload" }, { role: "togglefullscreen" }, { type: "separator" },
-      { role: "resetZoom" }, { role: "zoomIn" }, { role: "zoomOut" },
-      ...(app.isPackaged ? [] : [{ type: "separator" }, { role: "toggleDevTools" }]),
+      { label: "Full Screen", accelerator: "F11", click: (_i, win) => win && win.setFullScreen(!win.isFullScreen()) },
+      { label: "Exit Full Screen", accelerator: "Shift+Escape", click: (_i, win) => win && win.setFullScreen(false) },
+      { type: "separator" },
+      { label: "Larger", accelerator: "CmdOrCtrl+=", click: (_i, win) => win && setUserZoom(win, userZoom + 0.1) },
+      { label: "Larger", accelerator: "CmdOrCtrl+Plus", visible: false, click: (_i, win) => win && setUserZoom(win, userZoom + 0.1) },
+      { label: "Smaller", accelerator: "CmdOrCtrl+-", click: (_i, win) => win && setUserZoom(win, userZoom - 0.1) },
+      { label: "Normal size", click: (_i, win) => win && setUserZoom(win, 1) },
+      { type: "separator" },
+      { role: "reload" },
+      ...(app.isPackaged ? [] : [{ role: "toggleDevTools" }]),
     ] },
     { role: "windowMenu" },
   ]));

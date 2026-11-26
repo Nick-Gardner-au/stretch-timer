@@ -382,3 +382,8 @@
   .play svg { width: 88px; height: 88px; }
   .play .icon { top: 44px; }
 }
+
+/* wide screens: bigger photo card in the left column */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .figure-box { --fig-h: clamp(150px, 26vh, 300px); }
+}

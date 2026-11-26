@@ -41,6 +41,8 @@ It now runs full-screen and works offline. Your settings and custom programs are
 - **Silent switch:** on iOS 17 and later, the app plays sound even when the ring/silent switch is set to silent. On older iOS versions, turn silent mode off to hear it.
 - **Screen stays on while the timer runs.** This needs iOS 18.4 or later when opened from the home screen. On older iOS versions, set *Settings → Display & Brightness → Auto-Lock* to a longer time while you work out.
 - **Leaving the app:** if you switch apps or lock the phone, iOS pauses the app and there's no sound. The timer keeps time, though. When you come back, it jumps to where the workout should be now.
+- **Sound, voice and ticks:** in Settings, under Sound. Settings can be opened during a workout to change these; the other settings are available once the workout is stopped.
+- **Between exercises:** during the rest before a new exercise, the screen shows that exercise (marked *Up next*) and its instructions.
 - **Program menu:** tap the program name at the top to switch between Nick Program 2, Interval timer, Tempo timer and your custom programs, or to enter a new custom program.
 - **Backup:** *Settings → Backup → Export* saves your settings and custom programs to a file. Use *Import* to load them on another phone, or to load the desktop app's `~/.config/stretch-timer/programs.json`.
 
@@ -96,8 +98,8 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/pilates
    - Repetitions and the time between exercises are adjusted so the workout fits the length. Settings → Exercises → *All 34 every time* keeps every exercise in every length with fewer repetitions (15 minutes then runs about 17 minutes).
 2. **Pace:** Slow, Standard or Brisk breathing. Slower breathing gives fewer repetitions in the same time.
 3. **Breath tempo counter:** each repetition is timed as breathe in · pause · breathe out · pause, shown in the four coloured cells with a different wood-block sound for each part. The Hundred is always 10 breaths of 5 counts in and 5 counts out, with a tick for each arm pump. Voice counts the repetitions; Settings → *Speak breath cues* also says "Breathe in" and "Breathe out".
-4. **Photos:** each exercise shows four photos of Joseph Pilates performing it, numbered 1–4 in sequence, from the *Return to Life* poster (© Pilates Guild, used with permission). Tap the photos for step-by-step instructions, the breathing pattern, focus and cautions.
-5. **Library:** all 34 exercises with photos. From an exercise's page you can exclude it from your workouts (for example, for an injury) or jump to it.
+4. **Photos:** each exercise shows four photos of Joseph Pilates performing it, numbered 1–4 in sequence, from the *Return to Life* poster (© Pilates Guild, used with permission). Tap the photos for step-by-step instructions, the breathing pattern, focus and cautions. During the transition before each exercise its steps are shown on screen.
+5. **Library:** Settings → Library: all 34 exercises with photos. From an exercise's page you can exclude it from your workouts (for example, for an injury) or jump to it.
 6. **Progress:** sessions this week, day streak, total sessions and time, a 5-week calendar (green = complete, dark green = partial), recent sessions, and how many times you have completed each exercise. A session is saved as you go, so closing the app mid-workout keeps what you did. Sessions shorter than 1 minute with no finished exercise are not saved.
 7. **Backup:** Settings → Backup → *Export* saves your settings and history to a file; *Import* loads it on another phone.
 
@@ -153,7 +155,7 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobilit
    - **Not yet:** the count starts again at this level.
    - **Too hard:** pain, or it could not be done with control. The track steps back a level.
    Choose **Later** to check in from Progress afterwards (most recent session only).
-5. **Library:** all 48 exercises by track, with their source (yoga, Pilates or rehab). From an exercise's page you can choose that level manually, or exclude the whole track from sessions (for example, for an injury).
+5. **Library:** Settings → Library: all 48 exercises by track, with their source (yoga, Pilates or rehab). From an exercise's page you can choose that level manually, or exclude the whole track from sessions (for example, for an injury).
 6. **Progress:** mobility score (levels gained across all tracks; 100% = every track mastered at level 4), sessions this week, day streak, level ups, a ladder for every track, and recent sessions.
 7. **Backup:** Settings → Backup → *Export* saves settings, levels and history to a file; *Import* loads it on another phone. *Reset levels* returns every track to level 1.
 
@@ -189,8 +191,8 @@ The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a 
 
 Use either file from a build (see below):
 
-1. **AppImage** (any distribution): `chmod +x Training-1.0.2.AppImage`, then run `./Training-1.0.2.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
-2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.2_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+1. **AppImage** (any distribution): `chmod +x Training-1.0.3.AppImage`, then run `./Training-1.0.3.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.3_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
 The .deb installs an AppArmor profile (`/etc/apparmor.d/training-desktop`) that Ubuntu 23.10 and later need before Electron apps can start; removing the package removes it.
 

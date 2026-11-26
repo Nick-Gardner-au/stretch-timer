@@ -3,6 +3,7 @@
 import * as store from "./store.js";
 import * as programs from "./programs.js";
 import { switcherItems, rememberApp } from "./apps.js";
+import { soundSection, fillNextSteps } from "./controls.js";
 import { Engine, buildWorkout, RUNNING, PAUSED, STOPPED, FINISHED } from "./engine.js";
 import { Player, Announcer } from "./sound.js";
 import { EXERCISES, PHASES, PHASE_PORTIONS, TEMPO_SYMBOLS, parseTempo, phaseSeconds, tempoCode } from "./workout.js";
@@ -54,7 +55,6 @@ class App {
 
     this.bind();
     this.applyTheme();
-    for (const key of ["sound", "voice", "ticks"]) $(`t${key[0].toUpperCase()}${key.slice(1)}`).checked = this.cfg[key];
     this.loadProgramSteps();
 
     setInterval(() => this.tickEngine(), 20);
@@ -69,8 +69,8 @@ class App {
   bind() {
     $("playBtn").addEventListener("click", () => this.startPause());
     $("stopBtn").addEventListener("click", () => this.stop());
-    $("prevBtn").addEventListener("click", () => this.goTo(this.step - 1));
-    $("nextBtn").addEventListener("click", () => this.goTo(this.step + 1));
+    $("prevBtn").addEventListener("click", () => this.goTo(this.navStep() - 1));
+    $("nextBtn").addEventListener("click", () => this.goTo(this.navStep() + 1));
     $("stepSelect").addEventListener("change", (e) => {
       this.goTo(Number(e.target.value));
       e.target.blur();
@@ -78,12 +78,6 @@ class App {
     $("themeBtn").addEventListener("click", () => this.toggleTheme());
     $("settingsBtn").addEventListener("click", () => this.openSettings());
     $("programBtn").addEventListener("click", () => this.toggleProgramMenu());
-    for (const key of ["sound", "voice", "ticks"]) {
-      $(`t${key[0].toUpperCase()}${key.slice(1)}`).addEventListener("change", (e) => {
-        this.cfg[key] = e.target.checked;
-        this.save();
-      });
-    }
     // the menu stays open until something is chosen or you tap outside it
     document.addEventListener("pointerdown", (e) => {
       if (!$("programMenu").hidden && !$("programMenu").contains(e.target) && !$("programBtn").contains(e.target))
@@ -98,8 +92,8 @@ class App {
       if (e.key === " ") {
         e.preventDefault();
         this.startPause();
-      } else if (e.key === "ArrowLeft") this.goTo(this.step - 1);
-      else if (e.key === "ArrowRight") this.goTo(this.step + 1);
+      } else if (e.key === "ArrowLeft") this.goTo(this.navStep() - 1);
+      else if (e.key === "ArrowRight") this.goTo(this.navStep() + 1);
       else if (e.key === "Escape") this.stop();
     });
     document.addEventListener("visibilitychange", () => {
@@ -116,6 +110,18 @@ class App {
 
   isActive() {
     return this.engine.state === RUNNING || this.engine.state === PAUSED;
+  }
+
+  // The step ◀ ▶ move from: the one the timer is in (during a transition the screen already shows the next).
+  navStep() {
+    const seg = this.engine.segment;
+    return this.isActive() && seg ? seg.step : this.step;
+  }
+
+  // A rest before a different exercise: the screen shows that exercise and its instructions.
+  isTransition(seg) {
+    const seq = this.program.sequence;
+    return seg && seg.kind === "rest" && seg.step + 1 < seq.length && seq[seg.step + 1][0] !== seq[seg.step][0];
   }
 
   tickEngine() {
@@ -306,10 +312,13 @@ class App {
     const state = eng.state;
     const seg = eng.segment;
     const active = (state === RUNNING || state === PAUSED) && seg && eng.idx < this.meta.length;
-    if (active && seg.step !== this.step && seg.kind !== "prepare") {
-      this.step = seg.step;
+    const upcoming = Boolean(active && this.isTransition(seg));
+    const shown = upcoming ? seg.step + 1 : active ? seg.step : this.step;
+    if (active && shown !== this.step && seg.kind !== "prepare") {
+      this.step = shown;
       this.refreshStatic();
     }
+    $("upNext").hidden = !upcoming;
     let view;
     if (active) {
       view = { seg, nxt: this.segs[eng.idx + 1] || null, remaining: seg.duration - eng.elapsed,
@@ -319,8 +328,8 @@ class App {
       view = { seg: segs[0] || null, nxt: segs[1] || null, remaining: segs[0] ? segs[0].duration : 0, frac: 0,
                left: total, paused: false, finished: state === FINISHED };
     }
+    view.upcoming = upcoming;
     $("timeLeft").textContent = fmtTime(view.left);
-    $("settingsBtn").disabled = active;
     this.renderTempo(active ? seg : null);
     this.renderStage(view);
     this.renderDash(state, active ? seg : null);
@@ -371,6 +380,21 @@ class App {
     $("mainBar").style.width = `${Math.min(1, v.frac) * 100}%`;
 
     let nLabel, nTime = "", nColour = null;
+    const next = $("nextBlock");
+    next.classList.toggle("instructions", v.upcoming);
+    $("nextSteps").hidden = !v.upcoming;
+    if (v.upcoming) {
+      const ex = this.program.exercises[this.program.sequence[this.step][0]];
+      if (this.stepsKey !== this.step) {
+        fillNextSteps($("nextSteps"), [ex.cue]);
+        this.stepsKey = this.step;
+      }
+      next.classList.remove("blank");
+      setText("nextLabel", `Up next: ${this.program.shortTitle(this.step)}`);
+      setText("nextTime", "");
+      $("nextTime").hidden = true;
+      return;
+    }
     if (v.finished) nLabel = "Pick a step and press Start";
     else if (!nxt) nLabel = "Next: Finish";
     else {
@@ -378,7 +402,6 @@ class App {
       nTime = fmtTime(nxt.duration);
       nColour = segColour(nxt);
     }
-    const next = $("nextBlock");
     next.classList.toggle("blank", !nColour);
     if (nColour) next.style.setProperty("--b", nColour);
     setText("nextLabel", nLabel);
@@ -435,8 +458,20 @@ class App {
     $("sheetBody").replaceChildren();
   }
 
+  setSound(key, on) {
+    this.cfg[key] = on;
+    this.save();
+  }
+
+  // During a workout only the sound switches can change.
+  openQuickSettings() {
+    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on)),
+      h("p", { class: "hint" }, "The other settings are available when the workout is stopped.")],
+    [h("span", { class: "spacer" }), h("button", { class: "btn primary", onclick: () => this.closeSheet() }, "Done")]);
+  }
+
   openSettings() {
-    if (this.isActive()) return;
+    if (this.isActive()) return this.openQuickSettings();
     const prog = this.program;
     const cfg = this.cfg;
     const num = (value, lo, hi) => h("input", { type: "number", inputmode: "numeric", min: lo, max: hi, value });
@@ -448,7 +483,7 @@ class App {
     const row = (label, input) => h("label", { class: "form-row" }, h("span", {}, label), input);
 
     const prep = num(cfg.prepare, 0, 60);
-    const body = [h("h2", {}, "TIMING"), row("Prepare countdown (s)", prep)];
+    const body = [...soundSection(cfg, (k, on) => this.setSound(k, on)), h("h2", {}, "TIMING"), row("Prepare countdown (s)", prep)];
     let rest = null;
     const timerIn = {}, ttIn = {}, ttTempo = [], tempoRows = {};
     if (!programs.STANDALONE.includes(prog.kind)) {
@@ -720,7 +755,6 @@ class App {
           this.cfg = config;
           this.save();
           this.applyTheme();
-          for (const key of ["sound", "voice", "ticks"]) $(`t${key[0].toUpperCase()}${key.slice(1)}`).checked = this.cfg[key];
         }
         this.closeSheet();
         this.setProgram(this.cfg.program);

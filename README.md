@@ -140,7 +140,7 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobilit
 
 ## What it does
 
-1. **12 movement tracks**, each a ladder of 4 levels:
+1. **12 movement tracks**, each a ladder of 6 levels. Levels 1–4 need little or no equipment; levels 5 and 6 add equipment (yoga blocks, bands, sliding pads, 2 kg ankle weights, kettlebells, the hamstring stretch tool) and unlock once level 4's benchmark has been met:
 
    | Region | Tracks |
    |---|---|
@@ -151,12 +151,12 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobilit
 2. **Sessions:** tap the title at the top (or Settings) to choose *Full* (all 12 tracks, about 18 minutes at level 1), *Hips* or *Spine + Hamstrings*. Each track contributes the exercise at your current level. One-sided exercises run left, then right.
 3. **Benchmarks:** every exercise has a benchmark shown on the main screen, for example *"Straight leg reaches 80° or more with the other leg flat, 45 s each side."* Tap the card for steps and cautions.
 4. **Check-in and progression:** at the end of a session (or after **■ Stop** if any exercise was finished), mark each exercise:
-   - **Met:** benchmark achieved at the full dose. Meeting it in 3 sessions in a row moves the track up a level (Settings → Progression: 2, 3 or 4 sessions). At level 4 it marks the track *mastered*.
+   - **Met:** benchmark achieved at the full dose. Meeting it in 3 sessions in a row moves the track up a level (Settings → Progression: 2, 3 or 4 sessions). Meeting level 4 moves the track on to the equipment levels; at level 6 it marks the track *mastered*. Tracks already mastered at level 4 move to level 5 automatically.
    - **Not yet:** the count starts again at this level.
    - **Too hard:** pain, or it could not be done with control. The track steps back a level.
    Choose **Later** to check in from Progress afterwards (most recent session only).
-5. **Library:** Settings → Library: all 48 exercises by track, with their source (yoga, Pilates or rehab). From an exercise's page you can choose that level manually, or exclude the whole track from sessions (for example, for an injury).
-6. **Progress:** mobility score (levels gained across all tracks; 100% = every track mastered at level 4), sessions this week, day streak, level ups, a ladder for every track, and recent sessions.
+5. **Library:** Settings → Library: all 72 exercises by track, with their source (yoga, Pilates, rehab or strength) and equipment. From an exercise's page you can choose that level manually, or exclude the whole track from sessions (for example, for an injury).
+6. **Progress:** mobility score (levels gained across all tracks; 100% = every track mastered at level 6), sessions this week, day streak, level ups, a ladder for every track, and recent sessions.
 7. **Backup:** Settings → Backup → *Export* saves settings, levels and history to a file; *Import* loads it on another phone. *Reset levels* returns every track to level 1.
 
 ## Testing on your computer
@@ -165,14 +165,14 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobilit
 python3 -m http.server 8765
 ```
 
-Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/mobility/tests.html to run its 13 tests.
+Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/mobility/tests.html to run its 16 tests.
 
 ## Files
 
 | File | What it is |
 |---|---|
 | `mobility/index.html`, `mobility/mobility.css` | The page; it also uses the Stretch Timer's `styles.css` and font |
-| `mobility/js/data.js` | The 12 tracks and 48 exercises: source, dose, steps, benchmark and caution |
+| `mobility/js/data.js` | The 12 tracks and 72 exercises: source, dose, equipment, steps, benchmark and caution |
 | `mobility/js/plan.js` | Builds a session from your levels and turns it into timed segments |
 | `mobility/js/store.js` | Settings, levels, the progression rules, history and progress figures |
 | `mobility/js/app.js` | The screen, check-in, Settings, Library and Progress |
@@ -191,8 +191,8 @@ The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a 
 
 Use either file from a build (see below):
 
-1. **AppImage** (any distribution): `chmod +x Training-1.0.3.AppImage`, then run `./Training-1.0.3.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
-2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.3_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+1. **AppImage** (any distribution): `chmod +x Training-1.0.4.AppImage`, then run `./Training-1.0.4.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.4_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
 The .deb installs an AppArmor profile (`/etc/apparmor.d/training-desktop`) that Ubuntu 23.10 and later need before Electron apps can start; removing the package removes it.
 

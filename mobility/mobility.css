@@ -115,24 +115,22 @@
   font-size: 15px;
 }
 
-/* ladder: four rising bars */
+/* ladder: one rising bar per level */
 .ladder {
   display: inline-flex;
   align-items: flex-end;
-  gap: 4px;
+  gap: 3px;
   height: 34px;
 }
 
 .ladder i {
-  width: 9px;
+  width: 7px;
   border-radius: 2px;
   background: var(--track);
 }
 
-.ladder i:nth-child(1) { height: 34%; }
-.ladder i:nth-child(2) { height: 56%; }
-.ladder i:nth-child(3) { height: 78%; }
-.ladder i:nth-child(4) { height: 100%; }
+/* bar heights are set inline; levels 5 and 6 (equipment) have a blue outline */
+.ladder i.eq { box-shadow: inset 0 0 0 1.5px var(--blue); }
 .ladder i.on { background: var(--work); }
 .ladder i.gold { background: var(--hi); }
 
@@ -142,7 +140,7 @@
 }
 
 .ladder.small i {
-  width: 6px;
+  width: 5px;
 }
 
 .dots {
@@ -275,6 +273,16 @@
 .tag.yoga { color: var(--p0); }
 .tag.pilates { color: var(--p3); }
 .tag.rehab { color: var(--p1); }
+.tag.strength { color: var(--p2); }
+
+.eq-divider {
+  margin: 10px 2px 2px;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  color: var(--blue);
+  text-transform: uppercase;
+}
 
 .steps {
   margin: 4px 0 10px;

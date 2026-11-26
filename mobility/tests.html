@@ -13,7 +13,7 @@
   <h1>Mobility tests</h1>
   <div id="out"></div>
   <script type="module">
-    import { TRACKS, EXERCISES, SOURCES, MAX_LEVEL, exerciseFor } from "./js/data.js";
+    import { TRACKS, EXERCISES, SOURCES, MAX_LEVEL, BASE_LEVELS, exerciseFor } from "./js/data.js";
     import { SESSIONS, SWITCH_REST, buildPlan, buildSegments } from "./js/plan.js";
     import * as store from "./js/store.js";
     import { Engine, FINISHED } from "../js/engine.js";
@@ -27,7 +27,8 @@
     const fakeClock = () => { const c = () => c.t; c.t = 0; return c; };
 
     const tests = {
-      "12 tracks covering hip, spine and hamstring directions, 4 levels each"() {
+      "12 tracks covering hip, spine and hamstring directions, 6 levels each"() {
+        eq([MAX_LEVEL, BASE_LEVELS], [6, 4]);
         eq(TRACKS.length, 12);
         eq(EXERCISES.length, 12 * MAX_LEVEL);
         for (const t of TRACKS) for (let l = 1; l <= MAX_LEVEL; l++) ok(exerciseFor(t.id, l), `missing ${t.id} level ${l}`);
@@ -92,11 +93,34 @@
         let lv = fresh();
         eq(store.score(lv), 0);
         for (const t of TRACKS) lv = store.setLevel(lv, t.id, MAX_LEVEL);
-        eq(store.score(lv), 75);
+        eq(store.score(lv), Math.round(((MAX_LEVEL - 1) / MAX_LEVEL) * 100));
         const all = Object.fromEntries(TRACKS.map((t) => [t.id, "met"]));
         for (let i = 0; i < 2; i++) ({ levels: lv } = store.applyCheckIn(lv, all, 2));
         ok(TRACKS.every((t) => lv[t.id].mastered && lv[t.id].level === MAX_LEVEL), "not mastered");
         eq(store.score(lv), 100);
+      },
+      "levels 5 and 6 use only the listed equipment; levels 1-4 need none of it"() {
+        const OWNED = /^(Yoga blocks? \(\d\)|Yoga block \(optional\)|Yoga strap|Ankle weights 2 kg|Broomstick|Slant board|Sliding pads? ?(\(2\))?|Kettlebell (6|8|12|16|20)(–(6|8|12|16|20))? kg|Foam roller|Hamstring stretch tool|Lacrosse ball|Resistance band \((light|medium|thick)\)|Bench or chair)$/;
+        for (const e of EXERCISES) {
+          if (e.level > BASE_LEVELS) {
+            ok(e.equipment && e.equipment.length, `${e.name}: no equipment listed`);
+            for (const item of e.equipment) ok(OWNED.test(item), `${e.name}: "${item}" is not in the equipment list`);
+          } else ok(!e.equipment, `${e.name}: level ${e.level} should not need the new equipment`);
+        }
+      },
+      "a track mastered at the old top level (4) moves on to level 5"() {
+        const lv = store.normaliseLevels({ hipER: { level: 4, met: 0, mastered: true }, spExt: { level: 4, met: 2, mastered: false } });
+        eq([lv.hipER, lv.spExt], [{ level: 5, met: 0, mastered: false }, { level: 4, met: 2, mastered: false }]);
+        let r = { levels: store.setLevel(fresh(), "spRot", 4) };
+        for (let i = 0; i < 3; i++) r = store.applyCheckIn(r.levels, { spRot: "met" }, 3);
+        eq([r.levels.spRot.level, r.changes[0].kind], [5, "up"]);
+      },
+      "a full session at the top level stays under 45 minutes"() {
+        let lv = fresh();
+        for (const t of TRACKS) lv = store.setLevel(lv, t.id, MAX_LEVEL);
+        const p = buildPlan(cfg(), lv);
+        ok(p.steps.every((s) => s.ex.level === MAX_LEVEL), "not at top level");
+        ok(p.total < 45 * 60, `top-level full session is ${p.total}s`);
       },
       "a full session runs to the finish on the clock"() {
         const p = buildPlan(cfg(), fresh());
@@ -113,8 +137,8 @@
       "settings and levels are validated"() {
         const c = store.normaliseConfig({ session: "legs", transition: 7, toProgress: 9, prepare: 500, excluded: ["hipER", "x"], theme: "pink" });
         eq([c.session, c.transition, c.toProgress, c.prepare, c.excluded, c.theme], ["full", 15, 3, 10, ["hipER"], "dark"]);
-        const l = store.normaliseLevels({ hipER: { level: 9, met: -1 }, spExt: { level: 4, met: 2, mastered: true }, hipIR: { level: 2, mastered: true } });
-        eq([l.hipER, l.spExt, l.hipIR], [{ level: 1, met: 0, mastered: false }, { level: 4, met: 2, mastered: true }, { level: 2, met: 0, mastered: false }]);
+        const l = store.normaliseLevels({ hipER: { level: 9, met: -1 }, spExt: { level: 6, met: 2, mastered: true }, hipIR: { level: 2, mastered: true } });
+        eq([l.hipER, l.spExt, l.hipIR], [{ level: 1, met: 0, mastered: false }, { level: 6, met: 2, mastered: true }, { level: 2, met: 0, mastered: false }]);
       },
       "streak, week and level-up counts"() {
         const now = new Date(2026, 10, 21, 12); // Saturday

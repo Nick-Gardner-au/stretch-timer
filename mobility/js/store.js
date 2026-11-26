@@ -1,7 +1,7 @@
 // Settings, track levels, workout history and the progression rules, kept in localStorage.
 
 import { SESSIONS, TRANSITIONS } from "./plan.js";
-import { TRACKS, TRACK_BY_ID, MAX_LEVEL } from "./data.js";
+import { TRACKS, TRACK_BY_ID, MAX_LEVEL, BASE_LEVELS } from "./data.js";
 
 const CONFIG_KEY = "mobility:config";
 const LEVELS_KEY = "mobility:levels";
@@ -53,8 +53,10 @@ export function normaliseLevels(saved) {
   const out = {};
   for (const t of TRACKS) {
     const s = saved && typeof saved === "object" ? saved[t.id] : null;
-    const level = s && Number.isInteger(s.level) && s.level >= 1 && s.level <= MAX_LEVEL ? s.level : 1;
-    const met = s && Number.isInteger(s.met) && s.met >= 0 ? s.met : 0;
+    let level = s && Number.isInteger(s.level) && s.level >= 1 && s.level <= MAX_LEVEL ? s.level : 1;
+    let met = s && Number.isInteger(s.met) && s.met >= 0 ? s.met : 0;
+    // Before the equipment levels, level 4 was the top: a track mastered there moves on to level 5.
+    if (s && s.mastered && level === BASE_LEVELS && BASE_LEVELS < MAX_LEVEL) [level, met] = [BASE_LEVELS + 1, 0];
     out[t.id] = { level, met, mastered: Boolean(s && s.mastered && level === MAX_LEVEL) };
   }
   return out;

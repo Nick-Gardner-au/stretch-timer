@@ -744,3 +744,46 @@ input[type="checkbox"] {
 .sheet input:disabled, .sheet select:disabled {
   opacity: 0.35;
 }
+
+/* ---------- wide screens (desktop window, full screen, tablet landscape) ----------
+   Two columns: the exercise, controls and counters on the left, the big timer on the right. */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  #app {
+    display: grid;
+    max-width: none;
+    grid-template-columns: minmax(400px, 36%) minmax(0, 1fr);
+    /* header, up to four rows of exercise detail, a spacer, then counters, controls and toggles at the bottom */
+    grid-template-rows: auto auto auto auto auto minmax(0, 1fr) auto auto auto;
+    padding-bottom: 12px;
+  }
+
+  #app > .dash { grid-row: 7; }
+  #app > .nav { grid-row: 8; }
+  #app > .toggles { grid-row: 9; }
+
+  #app > * {
+    grid-column: 1;
+  }
+
+  #app > .top {
+    grid-column: 1 / -1;
+    grid-template-columns: 96px 1fr 96px;
+  }
+
+  #app > .stage {
+    grid-column: 2;
+    grid-row: 2 / -1;
+    margin: 12px 12px 12px 0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  #app > .info {
+    padding-top: 18px;
+  }
+
+
+  .menu {
+    top: calc(env(safe-area-inset-top) + 84px);
+  }
+}

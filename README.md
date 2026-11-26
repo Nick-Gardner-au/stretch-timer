@@ -6,7 +6,7 @@ This folder is one installable app with three parts. Opening the site shows a ho
 2. **Pilates Mat**: the 34 original mat exercises (`pilates/`).
 3. **Mobility**: progressive hip, spine and hamstring sessions (`mobility/`).
 
-Tap the title at the top of any app to switch to another app or go back to **All apps**. If a workout is running, the app asks before leaving it. Each app keeps its own settings and history. The home screen marks the last app used and shows progress for Pilates and Mobility.
+Tap the title at the top of any app to switch to another app or go back to **All apps**. On a wide screen (desktop browser, tablet in landscape, desktop app) the apps use a two-column layout with a large timer. If a workout is running, the app asks before leaving it. Each app keeps its own settings and history. The home screen marks the last app used and shows progress for Pilates and Mobility.
 
 It's a *web app* (PWA): you put these files on a free website once, then add the site to your iPhone home screen. It then opens full-screen with its own icon like a normal app, and it works offline: the first visit stores all three apps on the phone.
 
@@ -189,10 +189,12 @@ The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a 
 
 Use either file from a build (see below):
 
-1. **AppImage** (any distribution): `chmod +x Training-1.0.0.AppImage`, then run `./Training-1.0.0.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
-2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ./training-desktop_1.0.0_amd64.deb`. Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+1. **AppImage** (any distribution): `chmod +x Training-1.0.2.AppImage`, then run `./Training-1.0.2.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.2_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
-If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `sudo apt install libfuse2` (Ubuntu 24.04: `libfuse2t64`).
+The .deb installs an AppArmor profile (`/etc/apparmor.d/training-desktop`) that Ubuntu 23.10 and later need before Electron apps can start; removing the package removes it.
+
+If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `sudo apt install libfuse2` (Ubuntu 24.04: `libfuse2t64`). On Ubuntu 23.10 and later it also needs to be started with `--no-sandbox`, because the AppArmor profile only covers the installed .deb; prefer the .deb there.
 
 ## Getting a build
 
@@ -203,7 +205,7 @@ If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `su
 ## Using it
 
 1. **Apps** menu: All apps (Ctrl+0), Stretch Timer (Ctrl+1), Pilates Mat (Ctrl+2), Mobility (Ctrl+3). It asks before leaving a running workout. The title menu inside each app switches apps as on the phone.
-2. The window can be resized; **View** has zoom and full screen.
+2. **Full screen:** press F11 (or **View → Full Screen**); F11 or Shift+Esc leaves it. In a wide window or full screen the apps switch to a two-column layout, with the exercise and controls on the left and the large timer on the right, and everything scales to the screen size (designed for 1600 × 900, enlarged on bigger screens). Ctrl+= and Ctrl+- make it larger or smaller; **View → Normal size** resets. The window size, full screen and zoom are remembered. Press Alt to show the menu bar.
 3. Space starts and pauses, the ◀ ▶ arrow keys move between exercises, Esc stops.
 4. Backups: Export on the phone and Import on the desktop (or the other way round) to move history and levels across.
 5. Voice cues use the system speech engine. If there is no voice, install it with `sudo apt install speech-dispatcher espeak-ng`.

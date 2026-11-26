@@ -93,6 +93,30 @@
       color: var(--muted);
       font-size: 12px;
     }
+    /* wide screens: three cards side by side, centred */
+    @media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+      .home {
+        max-width: 1200px;
+        justify-content: center;
+        padding: 48px 32px;
+      }
+      .home h1 { font-size: 64px; }
+      .home .sub { font-size: 16px; margin-bottom: 18px; }
+      #apps { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px !important; }
+      .app-card {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        justify-items: center;
+        text-align: center;
+        align-content: start;
+        padding: 32px 24px;
+      }
+      .app-card img { width: 128px; height: 128px; border-radius: 28px; }
+      .app-card b { font-size: 36px; }
+      .app-card p { font-size: 15px; }
+      .app-card .chev { display: none; }
+      .note { margin-top: 24px; text-align: center; }
+    }
   </style>
 </head>
 <body>
@@ -100,7 +124,7 @@
     <h1>TRAINING</h1>
     <p class="sub">Choose an app. Tap the title at the top of any app to switch back.</p>
     <div id="apps"></div>
-    <p class="note">Each app keeps its own settings and history on this phone.</p>
+    <p class="note">Each app keeps its own settings and history on this device.</p>
   </main>
   <script type="module">
     import { APPS, appUrl, lastApp } from "./js/apps.js";

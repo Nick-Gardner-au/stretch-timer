@@ -21,6 +21,17 @@ export class Player {
   constructor() {
     this.ctx = null;
     this.noise = null;
+    // iPhones pause Web Audio ("interrupted") when speech plays or the app is backgrounded, and do
+    // not always restart it. Any later tap or key press, and returning to the app, resumes it.
+    for (const ev of ["pointerdown", "touchend", "keydown"]) document.addEventListener(ev, () => this.resume(), { passive: true });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") this.resume();
+    });
+  }
+
+  resume() {
+    if (this.ctx && this.ctx.state !== "running" && this.ctx.state !== "closed") return this.ctx.resume().catch(() => {});
+    return Promise.resolve();
   }
 
   unlock() {
@@ -42,8 +53,18 @@ export class Player {
       this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
       const d = this.noise.getChannelData(0);
       for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      // A silent sound that never stops keeps the audio session open between knocks, so the phone
+      // does not put audio to sleep during long holds.
+      const keep = this.ctx.createBufferSource();
+      keep.buffer = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+      keep.loop = true;
+      keep.connect(this.ctx.destination);
+      keep.start();
+      this.ctx.addEventListener("statechange", () => {
+        if (this.ctx.state === "interrupted" || this.ctx.state === "suspended") setTimeout(() => this.resume(), 300);
+      });
     }
-    if (this.ctx.state !== "running") this.ctx.resume();
+    this.resume();
     if (window.speechSynthesis && !this.spoken) {
       // a silent utterance during the tap lets later speech play on iOS
       const u = new SpeechSynthesisUtterance(" ");
@@ -75,8 +96,18 @@ export class Player {
     click.start(t);
   }
 
+  // Plays straight away when audio is running; otherwise restarts it first and plays if that is quick
+  // (a late knock is worse than none).
   play(name) {
-    if (!this.ctx || this.ctx.state !== "running") return;
+    if (!this.ctx) return;
+    if (this.ctx.state === "running") return this._play(name);
+    const asked = performance.now();
+    this.resume().then(() => {
+      if (this.ctx.state === "running" && performance.now() - asked < 300) this._play(name);
+    });
+  }
+
+  _play(name) {
     const [freq, vol, knocks] = SOUNDS[name];
     const freqs = freq ? Array(knocks).fill(freq) : [1300, 980, 700];
     const t0 = this.ctx.currentTime + 0.005;
@@ -88,6 +119,8 @@ export class Player {
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 1.05;
     u.lang = "en-GB";
+    // speech can interrupt Web Audio on iPhones; restart it when speech ends
+    u.onend = u.onerror = () => this.resume();
     speechSynthesis.speak(u);
   }
 }

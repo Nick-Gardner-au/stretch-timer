@@ -787,3 +787,83 @@ input[type="checkbox"] {
     top: calc(env(safe-area-inset-top) + 84px);
   }
 }
+
+/* ---------- transition: "up next" tag and the next exercise's instructions ---------- */
+.up-next {
+  display: inline-block;
+  margin-bottom: 3px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.up-next[hidden] {
+  display: none;
+}
+
+.stage:has(.block.next.instructions) .block.main {
+  flex: 26;
+}
+
+/* phones: the next exercise's tempo row gives way to its instructions during the transition */
+@media (max-width: 899px), (max-aspect-ratio: 5/4) {
+  #app:has(.block.next.instructions) .tempo,
+  .block.next.instructions .label {
+    display: none;
+  }
+}
+
+.block.next.instructions {
+  flex: 74;
+  background: var(--card);
+  color: var(--fg);
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  text-transform: none;
+}
+
+.block.next.instructions .label {
+  flex: none;
+  line-height: 1.1;
+  font-size: 22px;
+  color: var(--hi);
+  text-transform: uppercase;
+  text-align: left;
+  white-space: normal;
+  max-width: none;
+}
+
+.next-steps {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.next-steps ol {
+  margin: 6px 0 0;
+  padding-left: 22px;
+}
+
+.next-steps li {
+  margin-bottom: 3px;
+}
+
+.next-steps p {
+  margin: 6px 0 0;
+}
+
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .block.next.instructions { padding: 20px 28px; }
+  .block.next.instructions .label { font-size: 32px; }
+  .next-steps { font-size: 20px; }
+}

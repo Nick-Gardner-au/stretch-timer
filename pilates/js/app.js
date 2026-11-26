@@ -4,6 +4,7 @@
 import { Engine, RUNNING, PAUSED, STOPPED, FINISHED } from "../../js/engine.js";
 import { Player } from "../../js/sound.js";
 import { switcherItems, rememberApp } from "../../js/apps.js";
+import { soundSection, fillNextSteps } from "../../js/controls.js";
 import * as store from "./store.js";
 import { EXERCISES, BY_ID, LEVELS, PHASES } from "./data.js";
 import { LENGTHS, PACES, SELECTIONS, LEVEL_FOR_LENGTH, buildPlan, buildSegments, stepTitle } from "./plan.js";
@@ -66,7 +67,6 @@ class App {
 
     this.bind();
     this.applyTheme();
-    for (const key of ["sound", "voice", "ticks"]) $(`t${key[0].toUpperCase()}${key.slice(1)}`).checked = this.cfg[key];
     this.rebuildPlan();
 
     setInterval(() => this.tickEngine(), 20);
@@ -81,26 +81,19 @@ class App {
   bind() {
     $("playBtn").addEventListener("click", () => this.startPause());
     $("stopBtn").addEventListener("click", () => this.stop());
-    $("prevBtn").addEventListener("click", () => this.goTo(this.step - 1));
-    $("nextBtn").addEventListener("click", () => this.goTo(this.step + 1));
+    $("prevBtn").addEventListener("click", () => this.goTo(this.navStep() - 1));
+    $("nextBtn").addEventListener("click", () => this.goTo(this.navStep() + 1));
     $("stepSelect").addEventListener("change", (e) => {
       this.goTo(Number(e.target.value));
       e.target.blur();
     });
     $("settingsBtn").addEventListener("click", () => this.openSettings());
     $("progressBtn").addEventListener("click", () => this.openProgress());
-    $("libraryBtn").addEventListener("click", () => this.openLibrary());
     $("diagramBtn").addEventListener("click", () => this.openDetail(this.plan.steps[this.step].ex, false));
     $("diagramBtn").addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.openDetail(this.plan.steps[this.step].ex, false);
     });
     $("lengthBtn").addEventListener("click", () => this.toggleLengthMenu());
-    for (const key of ["sound", "voice", "ticks"]) {
-      $(`t${key[0].toUpperCase()}${key.slice(1)}`).addEventListener("change", (e) => {
-        this.cfg[key] = e.target.checked;
-        this.save();
-      });
-    }
     document.addEventListener("pointerdown", (e) => {
       if (!$("lengthMenu").hidden && !$("lengthMenu").contains(e.target) && !$("lengthBtn").contains(e.target))
         this.closeLengthMenu();
@@ -114,8 +107,8 @@ class App {
       if (e.key === " ") {
         e.preventDefault();
         this.startPause();
-      } else if (e.key === "ArrowLeft") this.goTo(this.step - 1);
-      else if (e.key === "ArrowRight") this.goTo(this.step + 1);
+      } else if (e.key === "ArrowLeft") this.goTo(this.navStep() - 1);
+      else if (e.key === "ArrowRight") this.goTo(this.navStep() + 1);
       else if (e.key === "Escape") this.stop();
     });
     document.addEventListener("visibilitychange", () => {
@@ -132,6 +125,17 @@ class App {
 
   isActive() {
     return this.engine.state === RUNNING || this.engine.state === PAUSED;
+  }
+
+  // The step ◀ ▶ move from: the one the timer is in (during a transition the screen already shows the next).
+  navStep() {
+    const seg = this.engine.segment;
+    return this.isActive() && seg ? seg.step : this.step;
+  }
+
+  // A rest before a different exercise (not a side switch): the screen shows that exercise and its steps.
+  isTransition(seg) {
+    return Boolean(seg && seg.kind === "rest" && !seg.switch && seg.step + 1 < this.plan.steps.length);
   }
 
   tickEngine() {
@@ -400,10 +404,13 @@ class App {
     const state = eng.state;
     const seg = eng.segment;
     const active = (state === RUNNING || state === PAUSED) && seg && eng.idx < this.meta.length;
-    if (active && seg.step !== this.step && seg.kind !== "prepare") {
-      this.step = seg.step;
+    const upcoming = Boolean(active && this.isTransition(seg));
+    const shown = upcoming ? seg.step + 1 : active ? seg.step : this.step;
+    if (active && shown !== this.step && seg.kind !== "prepare") {
+      this.step = shown;
       this.refreshStatic();
     }
+    $("upNext").hidden = !upcoming;
     let view;
     if (active) {
       view = { seg, nxt: this.segs[eng.idx + 1] || null, remaining: seg.duration - eng.elapsed,
@@ -413,8 +420,8 @@ class App {
       view = { seg: segs[0] || null, nxt: segs[1] || null, remaining: segs[0] ? segs[0].duration : 0, frac: 0,
                left: total, paused: false, finished: state === FINISHED };
     }
+    view.upcoming = upcoming;
     setText("timeLeft", fmtTime(view.left));
-    $("settingsBtn").disabled = active;
     this.renderTempo(active ? seg : null);
     this.renderStage(view);
     this.renderDash(state, active ? seg : null);
@@ -451,6 +458,20 @@ class App {
     $("mainBar").style.width = `${Math.min(1, v.frac) * 100}%`;
 
     let nLabel, nTime = "", nColour = null;
+    const next = $("nextBlock");
+    next.classList.toggle("instructions", v.upcoming);
+    $("nextSteps").hidden = !v.upcoming;
+    if (v.upcoming) {
+      if (this.stepsKey !== this.step) {
+        fillNextSteps($("nextSteps"), this.plan.steps[this.step].ex.steps);
+        this.stepsKey = this.step;
+      }
+      next.classList.remove("blank");
+      setText("nextLabel", `Up next: ${this.shortTitle(this.step)}`);
+      setText("nextTime", "");
+      $("nextTime").hidden = true;
+      return;
+    }
     if (v.finished) nLabel = "Pick an exercise and press Start";
     else if (!nxt) nLabel = "Next: Finish";
     else {
@@ -458,7 +479,6 @@ class App {
       nTime = fmtTime(nxt.duration);
       nColour = segColour(nxt);
     }
-    const next = $("nextBlock");
     next.classList.toggle("blank", !nColour);
     if (nColour) next.style.setProperty("--b", nColour);
     setText("nextLabel", nLabel);
@@ -514,8 +534,27 @@ class App {
   }
 
   // Settings: length, pace, exercise selection, prepare, voice, theme, backup.
+  setSound(key, on, draft) {
+    this.cfg[key] = on;
+    if (draft) draft[key] = on;
+    this.save();
+  }
+
+  librarySection() {
+    return [h("h2", {}, "LIBRARY"),
+      h("p", { class: "hint" }, "All 34 exercises with photos, steps and cautions. Exclude an exercise from its page."),
+      h("div", { class: "row-btns" }, h("button", { class: "btn", onclick: () => this.openLibrary() }, "Open library"))];
+  }
+
+  // During a workout only the sound switches and the library are available.
+  openQuickSettings() {
+    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on)), ...this.librarySection(),
+      h("p", { class: "hint" }, "The other settings are available when the workout is stopped.")],
+    [h("span", { class: "spacer" }), h("button", { class: "btn primary", onclick: () => this.closeSheet() }, "Done")]);
+  }
+
   openSettings() {
-    if (this.isActive()) return;
+    if (this.isActive()) return this.openQuickSettings();
     const draft = { ...this.cfg, excluded: [...this.cfg.excluded] };
     const body = h("div");
     const choice = (options, current, pick) => h("div", { class: "choice" }, ...options.map(([value, label, sub]) =>
@@ -527,6 +566,8 @@ class App {
       const breath = h("input", { type: "checkbox", checked: draft.breathVoice, onchange: (e) => (draft.breathVoice = e.target.checked) });
       const over = Math.abs(plan.total - draft.length * 60) > 60;
       body.replaceChildren(...[
+        ...soundSection(draft, (k, on) => this.setSound(k, on, draft)),
+        ...this.librarySection(),
         h("h2", {}, "WORKOUT LENGTH"),
         choice(LENGTHS.map((len) => {
           const p = buildPlan({ ...draft, length: len });
@@ -740,7 +781,6 @@ class App {
           this.cfg = config;
           this.save();
           this.applyTheme();
-          for (const key of ["sound", "voice", "ticks"]) $(`t${key[0].toUpperCase()}${key.slice(1)}`).checked = this.cfg[key];
         }
         this.endWorkout();
         this.step = 0;

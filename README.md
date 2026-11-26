@@ -178,3 +178,53 @@ Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/
 | `mobility/tests.html` | Browser tests |
 
 Stretch to mild tension, never pain. Stop any exercise that causes sharp, pinching or nerve-like pain and mark it *Too hard*. Seek medical advice before starting if you have an injury, recent surgery, osteoporosis or hypermobility, or are pregnant.
+
+---
+
+# Desktop app (the `desktop` folder)
+
+The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a Linux desktop app. It opens in its own window, works offline and keeps its own settings and history (separate from the phone).
+
+## Installing
+
+Use either file from a build (see below):
+
+1. **AppImage** (any distribution): `chmod +x Training-1.0.0.AppImage`, then run `./Training-1.0.0.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ./training-desktop_1.0.0_amd64.deb`. Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+
+If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `sudo apt install libfuse2` (Ubuntu 24.04: `libfuse2t64`).
+
+## Getting a build
+
+1. On github.com, open **Actions → Desktop app → Run workflow**. When it finishes (about 5 minutes), download `training-linux` under **Artifacts**.
+2. Or push a tag such as `desktop-v1.0.0` to publish the files on a Releases page.
+3. Or build it yourself (below).
+
+## Using it
+
+1. **Apps** menu: All apps (Ctrl+0), Stretch Timer (Ctrl+1), Pilates Mat (Ctrl+2), Mobility (Ctrl+3). It asks before leaving a running workout. The title menu inside each app switches apps as on the phone.
+2. The window can be resized; **View** has zoom and full screen.
+3. Space starts and pauses, the ◀ ▶ arrow keys move between exercises, Esc stops.
+4. Backups: Export on the phone and Import on the desktop (or the other way round) to move history and levels across.
+5. Voice cues use the system speech engine. If there is no voice, install it with `sudo apt install speech-dispatcher espeak-ng`.
+
+## Building it yourself
+
+Needs [Node.js](https://nodejs.org) 20 or later.
+
+```bash
+cd desktop
+npm install
+npm start            # run it
+npm run dist         # AppImage and .deb in desktop/dist
+```
+
+`npm start` and `npm run dist` copy the web app from the repository root into `desktop/web` first, so changes to the phone app are picked up by the next desktop build.
+
+| File | What it is |
+|---|---|
+| `desktop/main.js` | Opens the window, serves the bundled web app and builds the Apps menu |
+| `desktop/scripts/copy-web.js` | Copies the web app into `desktop/web` before running or building |
+| `desktop/package.json` | Electron and package settings |
+| `desktop/build/icon.png` | App icon |
+| `.github/workflows/desktop.yml` | Builds the AppImage and .deb on GitHub |

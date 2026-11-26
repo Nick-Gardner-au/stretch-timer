@@ -6,7 +6,7 @@ import { Player } from "../../js/sound.js";
 import { switcherItems, rememberApp } from "../../js/apps.js";
 import { soundSection, fillNextSteps } from "../../js/controls.js";
 import * as store from "./store.js";
-import { TRACKS, TRACK_BY_ID, REGIONS, MAX_LEVEL, exerciseFor, trackTitle, doseText } from "./data.js";
+import { TRACKS, TRACK_BY_ID, REGIONS, MAX_LEVEL, BASE_LEVELS, EXERCISES, exerciseFor, trackTitle, doseText, equipmentText } from "./data.js";
 import { SESSIONS, TRANSITIONS, buildPlan, buildSegments, stepTitle } from "./plan.js";
 
 const $ = (id) => document.getElementById(id);
@@ -44,7 +44,9 @@ const NUMBERS = { 1: "one", 2: "two", 3: "three" };
 
 // Four bars filled to the level; the top one turns solid when mastered.
 const ladder = (state, cls = "ladder") => h("span", { class: cls, "aria-label": `Level ${state.level} of ${MAX_LEVEL}` },
-  ...Array.from({ length: MAX_LEVEL }, (_, i) => h("i", { class: i < state.level ? (state.mastered ? "on gold" : "on") : "" })));
+  ...Array.from({ length: MAX_LEVEL }, (_, i) => h("i", {
+    class: [i < state.level ? (state.mastered ? "on gold" : "on") : "", i >= BASE_LEVELS ? "eq" : ""].join(" ").trim(),
+    style: `height: ${Math.round(((i + 1) / MAX_LEVEL) * 100)}%` })));
 
 // Dots for sessions meeting the benchmark at this level.
 const metDots = (state, need) => h("span", { class: "dots" },
@@ -371,12 +373,12 @@ class App {
     const lv = this.levels[st.track];
     setText("exTrack", trackTitle(t));
     setText("exName", ex.name);
-    setText("exDetail", [st.side ? `${st.side} side` : null, ex.source, doseText(ex)].filter(Boolean).join("  ·  "));
+    setText("exDetail", [st.side ? `${st.side} side` : null, ex.source, doseText(ex), equipmentText(ex) || null].filter(Boolean).join("  ·  "));
     $("benchLevel").replaceChildren(ladder(lv), h("span", { class: "lv" }, lv.mastered ? "MASTERED" : `LEVEL ${lv.level}/${MAX_LEVEL}`));
     $("benchText").textContent = ex.benchmark;
     $("benchMet").replaceChildren(metDots(lv, this.cfg.toProgress),
       h("span", {}, lv.level === MAX_LEVEL && lv.mastered ? "Top level mastered"
-        : `${lv.met} of ${this.cfg.toProgress} sessions met${lv.level === MAX_LEVEL ? " to master" : " to level up"}`));
+        : `${lv.met}/${this.cfg.toProgress} met${lv.level === MAX_LEVEL ? " to master" : " to level up"}`));
     $("stepSelect").value = String(this.step);
     $("programName").textContent = `Mobility · ${SESSIONS[this.plan.session].name}`;
     this.preview = null;
@@ -577,7 +579,8 @@ class App {
       const ex = exerciseFor(c.track, c.to);
       return h("div", { class: `change ${c.kind}` }, h("b", {}, `${text[c.kind]}: ${trackTitle(TRACK_BY_ID[c.track])}`),
         h("small", {}, c.kind === "mastered" ? `All ${MAX_LEVEL} levels complete. Keep ${ex.name} in your sessions to maintain the range.`
-          : `Level ${c.from} → ${c.to}. Next session: ${ex.name} (${ex.source}).`));
+          : `Level ${c.from} → ${c.to}. Next session: ${ex.name} (${ex.source})${ex.equipment ? `, using ${equipmentText(ex).toLowerCase()}` : ""}.`
+            + (c.kind === "up" && c.from === BASE_LEVELS ? " All bodyweight levels complete: levels 5 and 6 add equipment." : "")));
     });
     const met = Object.values(results).filter((r) => r === "met").length;
     this.openSheet([
@@ -599,7 +602,7 @@ class App {
 
   librarySection() {
     return [h("h2", {}, "LIBRARY"),
-      h("p", { class: "hint" }, "All 48 exercises by movement, with steps, benchmarks and cautions. Choose a level or exclude a movement from its page."),
+      h("p", { class: "hint" }, `All ${EXERCISES.length} exercises by movement, with steps, benchmarks and cautions. Choose a level or exclude a movement from its page.`),
       h("div", { class: "row-btns" }, h("button", { class: "btn", onclick: () => this.openLibrary() }, "Open library"))];
   }
 
@@ -687,17 +690,18 @@ class App {
           h("div", { class: "track-head" }, h("b", {}, t.name), ladder(lv, "ladder small"),
             h("small", {}, off ? "Excluded" : lv.mastered ? "Mastered" : `Level ${lv.level}`)),
           h("p", { class: "hint" }, t.aim),
-          ...[1, 2, 3, 4].map((n) => {
+          ...Array.from({ length: MAX_LEVEL }, (_, i) => i + 1).flatMap((n) => {
             const ex = exerciseFor(t.id, n);
-            return h("button", { class: `lib-item${n === lv.level ? " current" : ""}${n < lv.level ? " passed" : ""}`, onclick: () => this.openDetail(ex, true) },
+            const row = h("button", { class: `lib-item${n === lv.level ? " current" : ""}${n < lv.level ? " passed" : ""}${n > BASE_LEVELS ? " eq" : ""}`, onclick: () => this.openDetail(ex, true) },
               h("span", { class: "lv-num" }, String(n)),
-              h("span", {}, h("b", {}, ex.name), h("small", {}, `${ex.alt} · ${doseText(ex)}`)),
+              h("span", {}, h("b", {}, ex.name), h("small", {}, [ex.alt, doseText(ex), equipmentText(ex)].filter(Boolean).join(" · "))),
               h("span", { class: `tag ${ex.source.toLowerCase()}` }, ex.source));
+            return n === BASE_LEVELS + 1 ? [h("div", { class: "eq-divider" }, "With equipment, after level 4"), row] : [row];
           }));
       }),
     ]);
     this.openSheet([h("h2", {}, "EXERCISE LIBRARY"),
-                    h("p", { class: "hint" }, "12 movement tracks, 4 levels each, from yoga, Pilates and rehabilitation. Your current level is highlighted. Tap an exercise for steps, the benchmark and cautions."),
+                    h("p", { class: "hint" }, `${TRACKS.length} movement tracks, ${MAX_LEVEL} levels each, from yoga, Pilates, rehabilitation and strength training. Levels 1–${BASE_LEVELS} need little or no equipment; levels ${BASE_LEVELS + 1}–${MAX_LEVEL} add blocks, bands, sliders, ankle weights, kettlebells or the hamstring stretch tool. Your current level is highlighted. Tap an exercise for steps, the benchmark and cautions.`),
                     ...groups.flat()],
                    [h("span", { class: "spacer" }), this.closeBtn()]);
   }
@@ -724,7 +728,8 @@ class App {
         h("dt", {}, "Track"), h("dd", {}, trackTitle(t)),
         h("dt", {}, "Level"), h("dd", {}, `${ex.level} of ${MAX_LEVEL}${ex.level === lv.level ? " (current)" : ""}`),
         h("dt", {}, "Origin"), h("dd", {}, `${ex.source} · ${ex.alt}`),
-        h("dt", {}, "Dose"), h("dd", {}, doseText(ex) + (ex.mode === "reps" ? ` · ${ex.rep} s a rep` : ""))),
+        h("dt", {}, "Dose"), h("dd", {}, doseText(ex) + (ex.mode === "reps" ? ` · ${ex.rep} s a rep` : "")),
+        ex.equipment ? h("dt", {}, "Equipment") : null, ex.equipment ? h("dd", {}, equipmentText(ex)) : null),
       h("div", { class: "bench-card" }, h("div", { class: "bench-h" }, "BENCHMARK"), h("p", {}, ex.benchmark)),
       h("ol", { class: "steps" }, ...ex.steps.map((s) => h("li", {}, s))),
       h("p", { class: "caution" }, ex.caution),

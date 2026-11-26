@@ -1,17 +1,20 @@
-// Hip, spine and hamstring mobility: 12 movement tracks, each a ladder of 4 levels drawn from yoga,
-// Pilates and rehabilitation exercise. Instructions are short coaching notes, not quotations.
+// Hip, spine and hamstring mobility: 12 movement tracks, each a ladder of 6 levels drawn from yoga,
+// Pilates, rehabilitation and strength exercise. Levels 1-4 need little or no equipment; levels 5 and
+// 6 add equipment (blocks, bands, sliders, ankle weights, kettlebells, the hamstring stretch tool). Instructions are short coaching notes, not quotations.
 //
 // Each exercise:
 //   mode       "hold" (a timed hold) or "reps" (timed repetitions)
 //   dose       seconds for a hold, or repetitions for reps
 //   rep        seconds per repetition (reps mode)
 //   sides      true when done on the left, then the right
+//   equipment  items needed (levels 5 and 6)
 //   benchmark  what to achieve at the prescribed dose. Meeting it in enough sessions moves the
 //              track up a level.
 
 export const REGIONS = { hip: "Hip", spine: "Spine", ham: "Hamstrings" };
-export const SOURCES = ["Yoga", "Pilates", "Rehab"];
-export const MAX_LEVEL = 4;
+export const SOURCES = ["Yoga", "Pilates", "Rehab", "Strength"];
+export const MAX_LEVEL = 6;
+export const BASE_LEVELS = 4; // levels 5 and 6 use equipment
 
 export const TRACKS = [
   { id: "spFlex", region: "spine", name: "Flexion", aim: "Forward bending, one segment at a time." },
@@ -535,6 +538,300 @@ export const EXERCISES = [
     benchmark: "Front knee straight, hips over the back knee, fingertips on the floor without blocks, 60 s each side.",
     caution: "Pad the back knee. Use blocks under the hands until the benchmark is met.",
   },
+  // ======================================================================================
+  // Levels 5 and 6: equipment progressions, reached once level 4's benchmark has been met.
+  // Equipment: yoga blocks, strap, 2 kg ankle weights, broomstick, slant board, sliding pads,
+  // kettlebells (6, 8, 12, 16, 20 kg), foam roller, hamstring stretch tool, lacrosse ball, bands.
+  // ======================================================================================
+
+  // ---------- spine flexion ----------
+  {
+    track: "spFlex", level: 5, name: "Kettlebell Jefferson Curl", alt: "Loaded, on a step", source: "Strength", mode: "reps", dose: 6, rep: 14, sides: false,
+    equipment: ["Kettlebell 6–8 kg"],
+    cue: "Same slow curl, now holding a light kettlebell.",
+    steps: ["Stand on a sturdy step with feet hip-width, knees straight, holding a 6 kg kettlebell by the handle in both hands.",
+            "Tuck the chin and curl down one segment at a time, letting the kettlebell hang close to the shins.",
+            "Lower until the kettlebell passes below the level of the step, without bouncing.",
+            "Roll up from the pelvis first, restacking the spine. Move to 8 kg when 6 kg is easy."],
+    benchmark: "6 slow curls holding 8 kg, knees straight, kettlebell below the level of the step, without pain.",
+    caution: "Avoid with disc-related back pain or osteoporosis. Increase the load only in small steps, and only when bodyweight curls are easy.",
+  },
+  {
+    track: "spFlex", level: 6, name: "Heavy Jefferson Curl", alt: "Loaded, on a step", source: "Strength", mode: "reps", dose: 6, rep: 14, sides: false,
+    equipment: ["Kettlebell 12 kg"],
+    cue: "Slow and segmental with 12 kg; never rush the bottom.",
+    steps: ["Stand on a sturdy step holding a 12 kg kettlebell in both hands, knees straight.",
+            "Curl down slowly from the head, one segment at a time.",
+            "Pause where the hamstrings and back are fully lengthened; keep breathing.",
+            "Roll up from the pelvis, restacking the spine to standing."],
+    benchmark: "6 slow curls with 12 kg, knees straight, kettlebell below the level of the step, without pain the next day.",
+    caution: "Stop at any sharp or radiating pain. This is an advanced, loaded flexion exercise; return to level 5 if form breaks down.",
+  },
+
+  // ---------- spine extension ----------
+  {
+    track: "spExt", level: 5, name: "Wheel Prep on Blocks", alt: "Urdhva Dhanurasana prep", source: "Yoga", mode: "hold", dose: 20, sides: false,
+    equipment: ["Yoga blocks (2)"],
+    cue: "Blocks against the wall; press to the top of the head, elbows in.",
+    steps: ["Place two blocks against a wall, shoulder-width apart, and lie on the back with the head between them.",
+            "Bend the knees with the feet hip-width, and place the hands on the blocks, fingers toward the shoulders.",
+            "Lift the hips, then press up onto the top of the head, keeping the elbows over the wrists.",
+            "Hold, then lower the back of the head and the spine down slowly."],
+    benchmark: "Press up to the top of the head with the elbows drawn in over the wrists and hold for 20 s.",
+    caution: "Avoid with neck or wrist injury. Do not move the head while weight is on it.",
+  },
+  {
+    track: "spExt", level: 6, name: "Wheel on Blocks", alt: "Urdhva Dhanurasana", source: "Yoga", mode: "hold", dose: 20, sides: false,
+    equipment: ["Yoga blocks (2)"],
+    cue: "From the head, straighten the arms and lift the chest toward the wall.",
+    steps: ["Set up as for wheel prep, hands on the blocks against the wall.",
+            "Press to the top of the head, then straighten the arms to lift the head off the floor.",
+            "Press the chest toward the wall and keep the knees in line with the feet.",
+            "To come down, tuck the chin and lower the upper back first."],
+    benchmark: "Arms straight with the chest pressing toward the wall and knees in line with the feet, for 20 s.",
+    caution: "Avoid with neck, shoulder or low-back injury. Return to level 5 if the low back pinches.",
+  },
+
+  // ---------- spine lateral flexion ----------
+  {
+    track: "spLat", level: 5, name: "Kettlebell Side Bend", alt: "Suitcase side bend", source: "Strength", mode: "reps", dose: 10, rep: 4, sides: true,
+    equipment: ["Kettlebell 12 kg"],
+    cue: "Kettlebell in one hand; bend straight sideways and lift with the other side.",
+    steps: ["Stand tall, feet hip-width, a 12 kg kettlebell in one hand by the side.",
+            "Bend straight sideways toward the kettlebell, letting it slide down the leg.",
+            "Return to upright using the waist on the opposite side.",
+            "Keep the hips still and the chest facing forward."],
+    benchmark: "10 controlled side bends each side with 12 kg, without twisting or leaning forward.",
+    caution: "Start with 8 kg if 12 kg pulls you forward.",
+  },
+  {
+    track: "spLat", level: 6, name: "Kettlebell Windmill", alt: "Overhead kettlebell", source: "Strength", mode: "reps", dose: 5, rep: 8, sides: true,
+    equipment: ["Kettlebell 8 kg", "Yoga block (optional)"],
+    cue: "Kettlebell locked overhead, eyes on it; hinge and reach the floor.",
+    steps: ["Press an 8 kg kettlebell overhead with one arm; turn both feet about 45° away from that arm.",
+            "Keep the arm locked and your eyes on the kettlebell.",
+            "Push the hip out on the kettlebell side and hinge sideways, sliding the free hand down the inside of the front leg.",
+            "Reach the floor or a block, then stand back up with the arm still vertical."],
+    benchmark: "Free hand reaches the floor with the kettlebell arm vertical and the eyes on it, 5 each side.",
+    caution: "Learn the movement with no weight first. Stop if the overhead shoulder feels unstable.",
+  },
+
+  // ---------- spine rotation ----------
+  {
+    track: "spRot", level: 5, name: "Half-kneeling Band Rotation", alt: "Banded thoracic rotation", source: "Rehab", mode: "reps", dose: 10, rep: 4, sides: true,
+    equipment: ["Resistance band (medium)"],
+    cue: "Hips square; turn the chest away from the anchor.",
+    steps: ["Anchor a band at chest height beside you and half-kneel, the inside knee down.",
+            "Hold the band with both hands, arms straight in front of the chest.",
+            "Turn the chest and arms away from the anchor, keeping the hips facing forward.",
+            "Return slowly against the band's pull."],
+    benchmark: "Chest turns 90° away from the anchor with the hips square, 10 each side against a medium band.",
+    caution: "Pad the kneeling knee.",
+  },
+  {
+    track: "spRot", level: 6, name: "Kettlebell Arm Bar", alt: "Loaded thoracic rotation", source: "Strength", mode: "hold", dose: 30, sides: true,
+    equipment: ["Kettlebell 8 kg"],
+    cue: "Kettlebell straight up; roll the body away and open the chest.",
+    steps: ["Lie on the back, press an 8 kg kettlebell straight up with one arm, the knee on that side bent.",
+            "Keep the arm vertical and roll onto the opposite side, the bent leg crossing over.",
+            "Let the chest open toward the ceiling while the arm stays locked and vertical.",
+            "Hold, then roll back slowly with the arm still vertical."],
+    benchmark: "Arm vertical and locked with the chest turned toward the ceiling, 30 s each side.",
+    caution: "Stop if the shoulder feels unstable. Bring the kettlebell down with both hands.",
+  },
+
+  // ---------- hip flexion ----------
+  {
+    track: "hipFlex", level: 5, name: "Weighted Seated Leg Lifts", alt: "Compression lifts with ankle weight", source: "Pilates", mode: "reps", dose: 10, rep: 4, sides: true,
+    equipment: ["Ankle weights 2 kg"],
+    cue: "Ankle weight on; sit tall and lift the straight leg.",
+    steps: ["Strap a 2 kg ankle weight to the working ankle and sit tall with both legs straight.",
+            "Place the hands on the mat beside the knees.",
+            "Lift the straight leg so the heel clears the floor; hold briefly.",
+            "Lower with control without leaning back."],
+    benchmark: "Heel clears the floor 10 times each side with a 2 kg ankle weight, sitting tall.",
+    caution: "Sit on a folded towel if the low back rounds.",
+  },
+  {
+    track: "hipFlex", level: 6, name: "Block Pike Lifts", alt: "Both legs, hands on blocks", source: "Strength", mode: "reps", dose: 8, rep: 4, sides: false,
+    equipment: ["Yoga blocks (2)"],
+    cue: "Press down into the blocks and lift both heels.",
+    steps: ["Sit with legs straight and together, a block under each hand beside the thighs.",
+            "Press down through the blocks, lift the chest and draw the abdominals in.",
+            "Lift both heels off the floor without leaning back.",
+            "Hold briefly and lower with control."],
+    benchmark: "Both heels clear the floor 8 times without leaning back or bending the knees.",
+    caution: "Lift one leg at a time until both can lift together.",
+  },
+
+  // ---------- hip extension ----------
+  {
+    track: "hipExt", level: 5, name: "Banded Hip Flexor Stretch", alt: "Half-kneeling with band distraction", source: "Rehab", mode: "hold", dose: 60, sides: true,
+    equipment: ["Resistance band (thick)"],
+    cue: "Band pulls the hip forward; tuck the pelvis and stay tall.",
+    steps: ["Anchor a thick band low behind you and loop it high around the top of the back thigh.",
+            "Half-kneel facing away from the anchor so the band pulls the hip forward.",
+            "Tuck the pelvis and squeeze the buttock of the kneeling leg.",
+            "Lift the arms overhead and keep the ribs down."],
+    benchmark: "Torso upright with the pelvis tucked and arms overhead against the band, 60 s each side.",
+    caution: "Pad the knee. Use a lighter band if the stretch is sharp at the front of the hip.",
+  },
+  {
+    track: "hipExt", level: 6, name: "Kettlebell Single-leg Bridge", alt: "Loaded Shoulder Bridge prep", source: "Strength", mode: "reps", dose: 10, rep: 5, sides: true,
+    equipment: ["Kettlebell 12 kg"],
+    cue: "Kettlebell on the hip; drive through one heel to a straight line.",
+    steps: ["Lie on the back, knees bent, and rest a 12 kg kettlebell across the hips, holding it steady.",
+            "Lift one foot so that knee is over the hip.",
+            "Drive through the standing heel to lift the hips into a line from shoulder to knee.",
+            "Hold the top briefly with the pelvis level, then lower with control."],
+    benchmark: "Straight line from shoulder to knee with the hips level, 10 each side with 12 kg.",
+    caution: "Start with 8 kg. Pad the kettlebell with a towel if it presses on the hip bones.",
+  },
+
+  // ---------- hip abduction (adductor length) ----------
+  {
+    track: "hipAbd", level: 5, name: "Slider Lateral Lunge", alt: "Sliding side lunge", source: "Rehab", mode: "reps", dose: 8, rep: 5, sides: true,
+    equipment: ["Sliding pad"],
+    cue: "Slide one foot out wide; sit into the other hip.",
+    steps: ["Stand with one foot on a sliding pad, feet hip-width.",
+            "Bend the standing knee and sit the hips back while the sliding foot glides out to the side.",
+            "Keep the sliding leg straight and the standing heel down.",
+            "Pull the sliding foot back in to stand, without using the hands."],
+    benchmark: "Slide into a deep side lunge and back without hands, standing heel down, 8 each side.",
+    caution: "Slide only as far as you can return under control.",
+  },
+  {
+    track: "hipAbd", level: 6, name: "Kettlebell Cossack Squat", alt: "Goblet side squat", source: "Strength", mode: "reps", dose: 6, rep: 6, sides: true,
+    equipment: ["Kettlebell 8–12 kg"],
+    cue: "Kettlebell at the chest; sit deep into one heel, other leg straight.",
+    steps: ["Stand with feet wide, holding a kettlebell by the horns at the chest.",
+            "Sit down over one heel while the other leg straightens with the toes turning up.",
+            "Go as deep as possible with the chest up and the heel down.",
+            "Drive back up to the centre and repeat."],
+    benchmark: "Hips below the bent knee with the heel down and the straight leg's toes up, 6 each side holding 12 kg.",
+    caution: "Start with 8 kg, or hold a block or chair until balance is secure.",
+  },
+
+  // ---------- hip adduction (inner-thigh strength) ----------
+  {
+    track: "hipAdd", level: 5, name: "Adductor Slide-outs", alt: "Standing slider adduction", source: "Rehab", mode: "reps", dose: 6, rep: 6, sides: true,
+    equipment: ["Sliding pad"],
+    cue: "Slide out slowly, then pull back in with the inner thigh.",
+    steps: ["Stand with one foot on a sliding pad, the standing knee soft, hands on the hips.",
+            "Slowly slide the straight leg out to the side, lowering into a wide stance.",
+            "Stop where you can still control it; keep the hips level.",
+            "Pull the sliding foot back in using the inner thigh, without using the hands."],
+    benchmark: "Slide out to a wide stance and pull back in with the inner thigh, no hands, 6 each side.",
+    caution: "Stop if groin pain is felt. Keep the range small at first.",
+  },
+  {
+    track: "hipAdd", level: 6, name: "Copenhagen Plank with Leg Raises", alt: "Long lever, ankle weight", source: "Rehab", mode: "reps", dose: 8, rep: 4, sides: true,
+    equipment: ["Ankle weights 2 kg", "Bench or chair"],
+    cue: "Top ankle on the bench; lift the weighted bottom leg to meet it.",
+    steps: ["Strap a 2 kg ankle weight to the bottom ankle and set up a long-lever Copenhagen plank, top ankle on the bench.",
+            "Lift the hips so the body is straight from head to foot.",
+            "Raise the bottom leg to touch the underside of the bench, then lower it.",
+            "Keep the hips stacked and lifted throughout."],
+    benchmark: "Bottom leg touches the bench 8 times each side with a 2 kg ankle weight, hips staying up.",
+    caution: "Stop if groin or knee pain is felt.",
+  },
+
+  // ---------- hip external rotation ----------
+  {
+    track: "hipER", level: 5, name: "Pigeon Fold on Blocks", alt: "Eka Pada Rajakapotasana, folded", source: "Yoga", mode: "hold", dose: 60, sides: true,
+    equipment: ["Yoga blocks (2)"],
+    cue: "Hips level; fold forward onto the forearms on blocks.",
+    steps: ["Set up in pigeon with the front shin angled across and the back leg straight.",
+            "Place two blocks in front of the front shin.",
+            "Keep the hips level and fold forward, resting the forearms on the blocks.",
+            "Lengthen the spine and breathe into the outer hip."],
+    benchmark: "Hips level and forearms resting on blocks at their lowest height, 60 s each side.",
+    caution: "Bring the front heel closer to the groin if the knee is uncomfortable.",
+  },
+  {
+    track: "hipER", level: 6, name: "Weighted 90/90 Front-foot Lift-offs", alt: "Active external rotation", source: "Rehab", mode: "reps", dose: 8, rep: 5, sides: true,
+    equipment: ["Ankle weights 2 kg"],
+    cue: "Ankle weight on the front leg; lift the foot and shin, torso tall.",
+    steps: ["Strap a 2 kg ankle weight to the front ankle and sit tall in 90/90.",
+            "Keep the front knee on the floor and lift the front foot by turning the thigh outward.",
+            "Hold the lift for 2 s without leaning back.",
+            "Lower with control and repeat."],
+    benchmark: "Front foot lifts and holds for 2 s with a 2 kg ankle weight, 8 each side, torso upright.",
+    caution: "Do it without the weight first. Rest if the hip cramps.",
+  },
+
+  // ---------- hip internal rotation ----------
+  {
+    track: "hipIR", level: 5, name: "Weighted 90/90 Back-foot Lift-offs", alt: "Active internal rotation", source: "Rehab", mode: "reps", dose: 8, rep: 5, sides: true,
+    equipment: ["Ankle weights 2 kg"],
+    cue: "Ankle weight on the back leg; lift the foot, no leaning.",
+    steps: ["Strap a 2 kg ankle weight to the back ankle and sit tall in 90/90.",
+            "Keep the back knee down and lift the back foot by turning the thigh inward.",
+            "Hold the lift for 2 s without leaning away.",
+            "Lower with control and repeat."],
+    benchmark: "Back foot lifts and holds for 2 s with a 2 kg ankle weight, 8 each side, without leaning.",
+    caution: "Small lifts are normal. Rest if the hip cramps.",
+  },
+  {
+    track: "hipIR", level: 6, name: "Kettlebell Shinbox Get-up", alt: "Goblet 90/90 to tall kneeling", source: "Strength", mode: "reps", dose: 6, rep: 8, sides: true,
+    equipment: ["Kettlebell 6–8 kg"],
+    cue: "Hold the kettlebell at the chest; rise from 90/90 to tall kneeling.",
+    steps: ["Sit in 90/90 holding a 6 kg kettlebell by the horns at the chest.",
+            "Squeeze the buttocks and drive the hips up and forward to tall kneeling.",
+            "Lower back to 90/90 with control.",
+            "Keep the torso upright and the kettlebell close. Move to 8 kg when 6 kg is easy."],
+    benchmark: "Rise from 90/90 to tall kneeling and back holding 8 kg, no hands down, 6 each side.",
+    caution: "Pad the knees.",
+  },
+
+  // ---------- hamstrings: active and loaded ----------
+  {
+    track: "hamLoad", level: 5, name: "Kettlebell Single-leg Romanian Deadlift", alt: "Loaded single-leg hinge", source: "Strength", mode: "reps", dose: 8, rep: 6, sides: true,
+    equipment: ["Kettlebell 12–16 kg"],
+    cue: "Kettlebell in the opposite hand; hinge and reach the back leg long.",
+    steps: ["Stand on one leg holding a 12 kg kettlebell in the opposite hand.",
+            "Hinge at the hip, reaching the free leg straight behind, the kettlebell lowering toward the standing foot.",
+            "Lower until the torso is close to parallel with the floor, the hips level.",
+            "Drive through the standing heel to return upright. Move to 16 kg when 12 kg is easy."],
+    benchmark: "Torso near parallel with the hips level and no wobble, 8 each side holding 16 kg.",
+    caution: "Keep the back long; reduce the load if the back rounds.",
+  },
+  {
+    track: "hamLoad", level: 6, name: "Single-leg Slider Hamstring Curl", alt: "Eccentric slider curl", source: "Rehab", mode: "reps", dose: 6, rep: 6, sides: true,
+    equipment: ["Sliding pads (2)"],
+    cue: "Hips up; slide one heel out slowly and pull it back in.",
+    steps: ["Lie on the back with one heel on a sliding pad, the other leg lifted, knees bent.",
+            "Lift the hips into a bridge.",
+            "Slowly slide the heel away until the leg is nearly straight, keeping the hips up.",
+            "Pull the heel back in to the start, still keeping the hips lifted."],
+    benchmark: "Slide out and back in with the hips staying lifted throughout, 6 each side.",
+    caution: "Start with both heels on pads. Expect hamstring soreness after the first sessions.",
+  },
+
+  // ---------- hamstrings: length ----------
+  {
+    track: "hamLen", level: 5, name: "Hamstring Tool Forward Fold", alt: "Assisted seated fold", source: "Rehab", mode: "hold", dose: 60, sides: false,
+    equipment: ["Hamstring stretch tool"],
+    cue: "Feet in the loop, hands on the rods; draw the chest toward the thighs.",
+    steps: ["Sit with both legs straight, feet together and flexed in the fabric loop of the tool.",
+            "Hold a rod in each hand and sit tall.",
+            "Draw the rods toward you to hinge forward from the hips, chest toward the thighs.",
+            "Keep the knees straight and the spine long; ease deeper on each out-breath."],
+    benchmark: "Chest close to the thighs with the knees straight and the spine long, for 60 s.",
+    caution: "Ease into the pull; never jerk the rods.",
+  },
+  {
+    track: "hamLen", level: 6, name: "Splits on Blocks", alt: "Hanumanasana with blocks", source: "Yoga", mode: "hold", dose: 60, sides: true,
+    equipment: ["Yoga blocks (3)"],
+    cue: "Slide into the split with a block under the front thigh and one under each hand.",
+    steps: ["From half splits, place a block under each hand and one under the front hamstring.",
+            "Slide the front heel forward and the back knee back, keeping the hips square.",
+            "Lower until the front thigh rests on the block.",
+            "Keep both legs straight and press through the front heel."],
+    benchmark: "Front thigh resting on a block at its lowest height, hips square and both legs straight, 60 s each side.",
+    caution: "Warm up first. Raise the blocks if the front hamstring feels sharp; never force the range.",
+  },
+
 ];
 
 for (const ex of EXERCISES) ex.id = `${ex.track}-${ex.level}`;
@@ -543,6 +840,7 @@ export const exerciseFor = (trackId, level) => BY_ID[`${trackId}-${level}`];
 
 // Seconds of work for one side of an exercise.
 export const workSeconds = (ex) => (ex.mode === "hold" ? ex.dose : ex.dose * ex.rep);
+export const equipmentText = (ex) => (ex.equipment || []).join(", ");
 export const doseText = (ex) => {
   const each = ex.sides ? " each side" : "";
   return ex.mode === "hold" ? `${ex.dose} s hold${each}` : `${ex.dose} reps${each}`;

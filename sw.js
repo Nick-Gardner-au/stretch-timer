@@ -1,6 +1,6 @@
 // Offline support: cache the app files, serve from cache, refresh in the background.
 // Bump VERSION whenever you upload changed files so phones pick up the new version.
-const VERSION = "stretch-timer-v7";
+const VERSION = "stretch-timer-v8";
 const PILATES_IMAGES = ["hundred", "rollup", "rollover", "legcircle", "rollingball", "singleleg", "doubleleg", "spinestretch",
   "openrocker", "corkscrew", "saw", "swan", "singlekick", "doublekick", "neckpull", "scissors", "bicycle",
   "bridge", "spinetwist", "jackknife", "sidekick", "teaser", "hiptwist", "swimming", "legpullfront",
@@ -8,7 +8,7 @@ const PILATES_IMAGES = ["hundred", "rollup", "rollover", "legcircle", "rollingba
 // The launcher and all three apps, so the combined app works offline from the first visit.
 const FILES = [
   "./", "index.html", "timer.html", "styles.css", "manifest.webmanifest",
-  "js/app.js", "js/apps.js", "js/controls.js", "js/engine.js", "js/programs.js", "js/sound.js", "js/store.js", "js/workout.js",
+  "js/app.js", "js/apps.js", "js/controls.js", "js/sync.js", "js/engine.js", "js/programs.js", "js/sound.js", "js/store.js", "js/workout.js",
   "fonts/BebasNeue-Bold.otf",
   "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png",
   "pilates/", "pilates/index.html", "pilates/pilates.css", "pilates/manifest.webmanifest",

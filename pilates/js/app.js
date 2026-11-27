@@ -5,6 +5,7 @@ import { Engine, RUNNING, PAUSED, STOPPED, FINISHED } from "../../js/engine.js";
 import { Player } from "../../js/sound.js";
 import { switcherItems, rememberApp } from "../../js/apps.js";
 import { soundSection, fillNextSteps } from "../../js/controls.js";
+import { autoSync, syncSoon, watchVisibility } from "../../js/sync.js";
 import * as store from "./store.js";
 import { EXERCISES, BY_ID, LEVELS, PHASES } from "./data.js";
 import { LENGTHS, PACES, SELECTIONS, LEVEL_FOR_LENGTH, buildPlan, buildSegments, stepTitle } from "./plan.js";
@@ -241,6 +242,7 @@ class App {
     this.engine.load([]);
     this.releaseWake();
     this.saveSession();
+    if (this.session) syncSoon();
     this.session = null;
   }
 
@@ -318,6 +320,7 @@ class App {
       const s = this.session;
       this.session = null;
       setTimeout(() => this.openComplete(s), 400);
+      syncSoon();
       return;
     }
     if (event === "second") {
@@ -735,7 +738,7 @@ class App {
         h("button", { class: "btn", onclick: () => this.exportBackup() }, "Export"),
         h("button", { class: "btn", onclick: () => {
           if (history.length && confirm("Delete all workout history? This cannot be undone.")) {
-            store.saveHistory([]);
+            store.clearHistory();
             this.openProgress();
           }
         } }, "Clear history")),
@@ -797,6 +800,8 @@ class App {
 
 window.pilatesApp = new App();
 rememberApp("pilates");
+watchVisibility();
+autoSync();
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});

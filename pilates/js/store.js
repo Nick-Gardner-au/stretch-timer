@@ -2,6 +2,7 @@
 
 import { LENGTHS, PACES, SELECTIONS } from "./plan.js";
 import { BY_ID } from "./data.js";
+import { recordDeleted } from "../../js/sync.js";
 
 const CONFIG_KEY = "pilates-timer:config";
 const HISTORY_KEY = "pilates-timer:history";
@@ -66,6 +67,12 @@ export function upsertSession(session) {
 
 export function deleteSession(id) {
   saveHistory(loadHistory().filter((s) => s.id !== id));
+  recordDeleted("pilates", [id]);
+}
+
+export function clearHistory() {
+  recordDeleted("pilates", loadHistory().map((s) => s.id));
+  saveHistory([]);
 }
 
 export function makeBackup(cfg) {

@@ -2,6 +2,7 @@
 
 import { SESSIONS, TRANSITIONS } from "./plan.js";
 import { TRACKS, TRACK_BY_ID, MAX_LEVEL, BASE_LEVELS } from "./data.js";
+import { recordDeleted } from "../../js/sync.js";
 
 const CONFIG_KEY = "mobility:config";
 const LEVELS_KEY = "mobility:levels";
@@ -48,7 +49,8 @@ export const loadConfig = () => normaliseConfig(read(CONFIG_KEY));
 export const saveConfig = (cfg) => write(CONFIG_KEY, cfg);
 
 // ---------- levels ----------
-// { trackId: { level: 1-4, met: sessions in a row meeting the benchmark at this level, mastered } }
+// { trackId: { level: 1-6, met: sessions in a row meeting the benchmark at this level, mastered,
+//              updated: time of the last change (ms), used to merge levels between devices } }
 export function normaliseLevels(saved) {
   const out = {};
   for (const t of TRACKS) {
@@ -58,6 +60,7 @@ export function normaliseLevels(saved) {
     // Before the equipment levels, level 4 was the top: a track mastered there moves on to level 5.
     if (s && s.mastered && level === BASE_LEVELS && BASE_LEVELS < MAX_LEVEL) [level, met] = [BASE_LEVELS + 1, 0];
     out[t.id] = { level, met, mastered: Boolean(s && s.mastered && level === MAX_LEVEL) };
+    if (s && Number.isFinite(s.updated) && s.updated > 0) out[t.id].updated = s.updated;
   }
   return out;
 }
@@ -74,12 +77,13 @@ export const RESULTS = { met: "Met", not: "Not yet", hard: "Too hard" };
 //   not   resets the count at this level
 //   hard  (pain, or the exercise could not be done with control) steps back a level
 // Returns { levels, changes: [{ track, from, to, kind: "up" | "down" | "mastered" }] }.
-export function applyCheckIn(levels, results, toProgress) {
+export function applyCheckIn(levels, results, toProgress, now = Date.now()) {
   const next = normaliseLevels(levels);
   const changes = [];
   for (const [id, result] of Object.entries(results || {})) {
     const t = next[id];
-    if (!t) continue;
+    if (!t || !(result in RESULTS)) continue;
+    t.updated = now;
     const from = t.level;
     if (result === "met") {
       t.met += 1;
@@ -107,10 +111,15 @@ export function applyCheckIn(levels, results, toProgress) {
 }
 
 // Manually choose a level (from the Library); the count starts again.
-export function setLevel(levels, trackId, level) {
+export function setLevel(levels, trackId, level, now = Date.now()) {
   const next = normaliseLevels(levels);
-  next[trackId] = { level, met: 0, mastered: false };
+  next[trackId] = { level, met: 0, mastered: false, updated: now };
   return next;
+}
+
+// Every track back to level 1 (dated, so the reset also reaches other devices).
+export function resetLevels(now = Date.now()) {
+  return Object.fromEntries(TRACKS.map((t) => [t.id, { level: 1, met: 0, mastered: false, updated: now }]));
 }
 
 // Mobility score: levels gained across all tracks, 0-100 %.
@@ -143,6 +152,12 @@ export function upsertSession(session) {
 
 export function deleteSession(id) {
   saveHistory(loadHistory().filter((s) => s.id !== id));
+  recordDeleted("mobility", [id]);
+}
+
+export function clearHistory() {
+  recordDeleted("mobility", loadHistory().map((s) => s.id));
+  saveHistory([]);
 }
 
 export function makeBackup(cfg, levels) {

@@ -5,6 +5,7 @@ import { Engine, RUNNING, PAUSED, STOPPED, FINISHED } from "../../js/engine.js";
 import { Player } from "../../js/sound.js";
 import { switcherItems, rememberApp } from "../../js/apps.js";
 import { soundSection, fillNextSteps } from "../../js/controls.js";
+import { autoSync, syncSoon, watchVisibility } from "../../js/sync.js";
 import * as store from "./store.js";
 import { TRACKS, TRACK_BY_ID, REGIONS, MAX_LEVEL, BASE_LEVELS, EXERCISES, exerciseFor, trackTitle, doseText, equipmentText } from "./data.js";
 import { SESSIONS, TRANSITIONS, buildPlan, buildSegments, stepTitle } from "./plan.js";
@@ -81,6 +82,13 @@ class App {
 
   // ---------- wiring ----------
   bind() {
+    // another device's progress arrived: pick up new levels unless a workout is under way
+    window.addEventListener("training-sync", (e) => {
+      if (e.detail.localChanged && !this.isActive() && !this.session) {
+        this.levels = store.loadLevels();
+        this.rebuildPlan();
+      }
+    });
     $("playBtn").addEventListener("click", () => this.startPause());
     $("stopBtn").addEventListener("click", () => this.stop());
     $("prevBtn").addEventListener("click", () => this.goTo(this.navStep() - 1));
@@ -245,6 +253,7 @@ class App {
     this.engine.load([]);
     this.releaseWake();
     this.saveSession();
+    if (this.session) syncSoon();
     this.session = null;
   }
 
@@ -554,6 +563,7 @@ class App {
       this.resetIfFinished();
       if (!this.isActive()) this.rebuildPlan();
       this.openCheckInResult(changes, chosen);
+      syncSoon();
     };
     this.openSheet([
       h("h2", {}, "BENCHMARK CHECK-IN"),
@@ -653,8 +663,9 @@ class App {
           h("button", { class: "btn", onclick: () => this.importBackup() }, "Import"),
           h("button", { class: "btn", onclick: () => {
             if (confirm("Reset every track to level 1? History is kept.")) {
-              this.levels = store.normaliseLevels(null);
+              this.levels = store.resetLevels();
               store.saveLevels(this.levels);
+              syncSoon();
               this.rebuildPlan();
               draw();
             }
@@ -743,6 +754,7 @@ class App {
         if (!confirm(`Make ${ex.name} your level for ${trackTitle(t)}? The benchmark count starts again.`)) return;
         this.levels = store.setLevel(this.levels, t.id, ex.level);
         store.saveLevels(this.levels);
+        syncSoon();
         this.endWorkout();
         this.rebuildPlan();
         this.openDetail(ex, fromLibrary);
@@ -797,7 +809,7 @@ class App {
         h("button", { class: "btn", onclick: () => this.exportBackup() }, "Export"),
         h("button", { class: "btn", onclick: () => {
           if (history.length && confirm("Delete all session history? Levels are kept. This cannot be undone.")) {
-            store.saveHistory([]);
+            store.clearHistory();
             this.openProgress();
           }
         } }, "Clear history")),
@@ -849,6 +861,8 @@ class App {
 
 window.mobilityApp = new App();
 rememberApp("mobility");
+watchVisibility();
+autoSync();
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});

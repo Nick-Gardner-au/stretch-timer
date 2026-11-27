@@ -88,6 +88,38 @@
       font-size: 11px;
       vertical-align: middle;
     }
+    .sync-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px 12px;
+      align-items: center;
+      padding: 14px;
+      background: var(--card);
+      border-radius: 14px;
+    }
+    .sync-panel b {
+      display: block;
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .sync-panel p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+    .sync-panel p.ok { color: var(--work); }
+    .sync-panel p.err { color: var(--rest); }
+    .sync-panel .btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .sheet ol.setup { padding-left: 22px; font-size: 15px; line-height: 1.45; }
+    .sheet ol.setup li { margin-bottom: 8px; }
+    .sheet a { color: var(--hi); }
+    .sheet input[type="password"], .sheet input[type="text"].token {
+      width: 100%;
+      background: var(--raised);
+      border: 1px solid var(--track);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font-size: 16px;
+      color: var(--fg);
+    }
     .note {
       margin-top: auto;
       color: var(--muted);
@@ -116,6 +148,7 @@
       .app-card p { font-size: 15px; }
       .app-card .chev { display: none; }
       .note { margin-top: 24px; text-align: center; }
+      .sync-panel { margin-top: 8px; }
     }
   </style>
 </head>
@@ -124,10 +157,19 @@
     <h1>TRAINING</h1>
     <p class="sub">Choose an app. Tap the title at the top of any app to switch back.</p>
     <div id="apps"></div>
-    <p class="note">Each app keeps its own settings and history on this device.</p>
+    <section id="sync" class="sync-panel"></section>
+    <p class="note">Each app keeps its own settings on this device. With sync on, Pilates and Mobility progress is shared between your devices.</p>
   </main>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-panel">
+      <div id="sheetBody" class="sheet-body"></div>
+      <div id="sheetButtons" class="sheet-buttons"></div>
+    </div>
+  </div>
   <script type="module">
     import { APPS, appUrl, lastApp } from "./js/apps.js";
+    import { syncStatus, setUpSync, syncNow, disconnectSync } from "./js/sync.js";
 
     const fmtDate = (iso) => new Date(iso).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
     const readList = (key) => {
@@ -161,6 +203,7 @@
     const last = lastApp();
     const box = document.getElementById("apps");
     box.style.cssText = "display:flex;flex-direction:column;gap:10px";
+    const statusLines = [];
     for (const app of APPS) {
       const a = document.createElement("a");
       a.className = "app-card";
@@ -169,9 +212,136 @@
       a.querySelector("b").textContent = app.name;
       if (app.key === last) a.querySelector("b").insertAdjacentHTML("beforeend", '<span class="last">Last used</span>');
       a.querySelector("p").textContent = app.blurb;
-      status(app.key).then((t) => { a.querySelector(".status").textContent = t; });
+      const line = a.querySelector(".status");
+      statusLines.push(() => status(app.key).then((t) => { line.textContent = t; }));
       box.append(a);
     }
+    const refreshCards = () => statusLines.forEach((f) => f());
+    refreshCards();
+
+    // ---------- sync ----------
+    const $ = (id) => document.getElementById(id);
+    function el(tag, attrs = {}, ...kids) {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+        else if (k === "class") e.className = v;
+        else e.setAttribute(k, v);
+      }
+      e.append(...kids);
+      return e;
+    }
+    const ago = (ms) => {
+      const s = Math.round((Date.now() - ms) / 1000);
+      if (s < 45) return "just now";
+      if (s < 3600) return `${Math.round(s / 60)} min ago`;
+      if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+      return new Date(ms).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+    };
+    let busy = false;
+
+    function drawSync() {
+      const st = syncStatus();
+      const panel = $("sync");
+      if (!st.setUp) {
+        panel.replaceChildren(
+          el("div", {}, el("b", {}, "SYNC BETWEEN DEVICES"),
+            el("p", {}, "Keep Pilates and Mobility progress the same on your iPhone and computer, through a private GitHub gist.")),
+          el("div", { class: "btns" }, el("button", { class: "btn primary", onclick: openSetup }, "Set up")));
+        return;
+      }
+      const line = busy ? el("p", {}, "Syncing…")
+        : st.error ? el("p", { class: "err" }, st.error)
+        : el("p", { class: "ok" }, st.last ? `Synced ${ago(st.last)}` : "Not synced yet");
+      panel.replaceChildren(
+        el("div", {}, el("b", {}, "SYNC"), line),
+        el("div", { class: "btns" },
+          el("button", { class: "btn", onclick: runSync }, "Sync now"),
+          el("button", { class: "btn", onclick: openManage }, "Options")));
+    }
+
+    async function runSync() {
+      if (busy) return;
+      busy = true;
+      drawSync();
+      try {
+        await syncNow();
+      } catch {
+        // shown from syncStatus().error
+      }
+      busy = false;
+      drawSync();
+    }
+
+    const openSheet = (body, buttons) => {
+      $("sheetBody").replaceChildren(...body);
+      $("sheetButtons").replaceChildren(...buttons);
+      $("sheet").hidden = false;
+    };
+    const closeSheet = () => ($("sheet").hidden = true);
+    const TOKEN_URL = "https://github.com/settings/tokens/new?scopes=gist&description=Training%20app%20sync";
+
+    function openSetup() {
+      const input = el("input", { type: "password", autocomplete: "off", autocapitalize: "off", spellcheck: "false", placeholder: "ghp_…" });
+      const msg = el("p", { class: "hint" }, "");
+      const connect = el("button", { class: "btn primary", onclick: async () => {
+        connect.disabled = true;
+        msg.textContent = "Connecting to GitHub…";
+        try {
+          await setUpSync(input.value);
+          closeSheet();
+          refreshCards();
+        } catch (e) {
+          msg.textContent = e.message;
+        }
+        connect.disabled = false;
+        drawSync();
+      } }, "Connect");
+      openSheet([
+        el("h2", {}, "SET UP SYNC"),
+        el("p", { class: "hint" }, "Progress is stored in a secret gist in your GitHub account. Do this once on each device, with the same token or a new one."),
+        el("ol", { class: "setup" },
+          el("li", {}, "Sign in to GitHub (a free account is fine), then ",
+            el("a", { href: TOKEN_URL, target: "_blank", rel: "noopener" }, "create a token"),
+            ". The link fills in the name and ticks the gist permission; choose an expiry (No expiration avoids renewing it) and select Generate token."),
+          el("li", {}, "Copy the token, paste it below and select Connect."),
+          el("li", {}, "On your other device, open Training, select Set up and paste the same token. Its progress is merged with this one's.")),
+        input,
+        msg,
+        el("p", { class: "hint" }, "The token is kept on this device only and is sent only to GitHub. A secret gist is not listed publicly, but anyone with its link can read it; it holds session dates, exercises and levels, nothing else."),
+      ], [el("button", { class: "btn", onclick: closeSheet }, "Cancel"), el("span", { class: "spacer" }), connect]);
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function openManage() {
+      const st = syncStatus();
+      openSheet([
+        el("h2", {}, "SYNC"),
+        el("p", { class: "hint" }, st.last ? `Last synced ${ago(st.last)}.` : "Not synced yet."),
+        el("p", { class: "hint" }, "Sync runs automatically when an app opens and after each workout or check-in. It shares Pilates and Mobility session history and Mobility levels; settings and Stretch Timer programs stay on each device."),
+        el("p", { class: "hint" }, "Disconnect removes the token from this device. Progress already on this device and in the gist is kept."),
+      ], [el("button", { class: "btn", onclick: () => {
+        if (!confirm("Disconnect sync on this device?")) return;
+        disconnectSync();
+        closeSheet();
+        drawSync();
+      } }, "Disconnect"), el("span", { class: "spacer" }), el("button", { class: "btn primary", onclick: closeSheet }, "Close")]);
+    }
+
+    $("sheet").addEventListener("click", (e) => { if (e.target === $("sheet")) closeSheet(); });
+    window.addEventListener("training-sync", (e) => {
+      if (e.detail.localChanged) refreshCards();
+      drawSync();
+    });
+    drawSync();
+    // sync on opening (and on returning to the app), at most once a minute
+    const syncIfDue = () => {
+      const st = syncStatus();
+      if (st.setUp && Date.now() - st.last > 60000) runSync();
+    };
+    syncIfDue();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncIfDue(); });
+    setInterval(() => { if (!busy) drawSync(); }, 30000);
 
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       navigator.serviceWorker.register("sw.js").catch(() => {});

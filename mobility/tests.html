@@ -17,6 +17,7 @@
     import { SESSIONS, SWITCH_REST, buildPlan, buildSegments } from "./js/plan.js";
     import * as store from "./js/store.js";
     import { Engine, FINISHED } from "../js/engine.js";
+    import { mergeSnapshots } from "../js/sync.js";
 
     const eq = (a, b, msg = "") => {
       if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${msg} expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
@@ -160,9 +161,29 @@
           history: [{ id: "x", start: "2026-01-01T00:00:00Z", seconds: 5, planned: [], done: [] }, { bad: 1 }] });
         eq([b.config.session, b.levels.hipER.level, b.history.length], ["hips", 3, 1]);
       },
+      "sync merges sessions from both devices and keeps deletions"() {
+        const s = (id, day, end) => ({ id, start: `2026-11-${day}T08:00:00Z`, end: end || `2026-11-${day}T08:20:00Z`, seconds: 1200, planned: [], done: [] });
+        const phone = { deleted: { mobility: ["gone"] }, mobility: { history: [s("a", 10), s("b", 12, "2026-11-12T09:00:00Z")], levels: {} }, pilates: { history: [s("p1", 11)] } };
+        const desk = { deleted: {}, mobility: { history: [s("b", 12), s("c", 13), s("gone", 9)], levels: {} }, pilates: { history: [] } };
+        const m = mergeSnapshots(phone, desk);
+        eq(m.mobility.history.map((x) => x.id), ["a", "b", "c"]);
+        eq(m.mobility.history[1].end, "2026-11-12T09:00:00Z", "later-saved copy of b");
+        eq(m.pilates.history.map((x) => x.id), ["p1"]);
+        eq(m.deleted.mobility, ["gone"]);
+        eq(JSON.stringify(mergeSnapshots(desk, phone)), JSON.stringify(m), "order of devices does not matter");
+      },
+      "sync keeps the most recent level change per track, including a step back"() {
+        const phone = { mobility: { history: [], levels: { hipER: { level: 3, met: 0, mastered: false, updated: 2000 }, spExt: { level: 2, met: 1, mastered: false } } } };
+        const desk = { mobility: { history: [], levels: { hipER: { level: 4, met: 2, mastered: false, updated: 1000 }, spExt: { level: 2, met: 2, mastered: false } } } };
+        const lv = mergeSnapshots(phone, desk).mobility.levels;
+        eq([lv.hipER.level, lv.spExt.met], [3, 2]);
+        const r = store.applyCheckIn(fresh(), { hipER: "hard", bogus: "met" }, 3, 5000);
+        eq([r.levels.hipER.updated, r.levels.spExt.updated], [5000, undefined]);
+        eq(store.resetLevels(7000).hipER, { level: 1, met: 0, mastered: false, updated: 7000 });
+      },
       async "the offline cache lists every app file"() {
         const sw = await (await fetch("sw.js")).text();
-        for (const f of ["js/app.js", "js/data.js", "js/plan.js", "js/store.js", "mobility.css", "../js/engine.js", "../js/sound.js", "../js/workout.js"]) {
+        for (const f of ["js/app.js", "js/data.js", "js/plan.js", "js/store.js", "mobility.css", "../js/engine.js", "../js/sound.js", "../js/workout.js", "../js/sync.js", "../js/controls.js", "../js/apps.js"]) {
           ok(sw.includes(`"${f}"`), `${f} missing from sw.js`);
           ok((await fetch(f)).ok, `${f} not found`);
         }

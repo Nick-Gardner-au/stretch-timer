@@ -8,6 +8,16 @@ This folder is one installable app with three parts. Opening the site shows a ho
 
 Tap the title at the top of any app to switch to another app or go back to **All apps**. On a wide screen (desktop browser, tablet in landscape, desktop app) the apps use a two-column layout with a large timer. If a workout is running, the app asks before leaving it. Each app keeps its own settings and history. The home screen marks the last app used and shows progress for Pilates and Mobility.
 
+## Sync between iPhone and computer
+
+Pilates and Mobility progress (session history and Mobility levels) can be shared between devices through a private GitHub gist. Settings and Stretch Timer programs stay on each device.
+
+1. On the home screen, select **Set up** under *Sync between devices*.
+2. Follow the link to create a GitHub token with the *gist* permission (a free GitHub account is enough), paste it and select **Connect**.
+3. Do the same on the other device, with the same token or a new one.
+
+Sync then runs by itself when an app opens and after each workout or check-in; **Sync now** runs it straight away. Sessions from both devices are combined, deleted sessions stay deleted, and for each Mobility track the most recent level change wins. The token is stored only on the device and sent only to GitHub. A secret gist is not listed publicly, but anyone with its address can read it. **Options → Disconnect** removes the token from a device.
+
 It's a *web app* (PWA): you put these files on a free website once, then add the site to your iPhone home screen. It then opens full-screen with its own icon like a normal app, and it works offline: the first visit stores all three apps on the phone.
 
 ## 1. Put it online with GitHub Pages (free, about 5 minutes)
@@ -68,6 +78,7 @@ Then open http://localhost:8765 for the home screen, http://localhost:8765/timer
 |---|---|
 | `index.html` | The home screen for choosing an app |
 | `js/apps.js` | The list of apps and the *switch app* entries in each app's title menu |
+| `js/sync.js` | Sync through a private GitHub gist: merging, deletions, automatic syncing |
 | `timer.html`, `styles.css` | The Stretch Timer page, and the look shared by all three apps |
 | `js/workout.js` | Nick Program 2's exercises and tempo helpers |
 | `js/programs.js` | The interval timer, tempo timer and custom programs |
@@ -165,7 +176,7 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobilit
 python3 -m http.server 8765
 ```
 
-Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/mobility/tests.html to run its 16 tests.
+Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/mobility/tests.html to run its 18 tests.
 
 ## Files
 
@@ -191,8 +202,8 @@ The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a 
 
 Use either file from a build (see below):
 
-1. **AppImage** (any distribution): `chmod +x Training-1.0.5.AppImage`, then run `./Training-1.0.5.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
-2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.5_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+1. **AppImage** (any distribution): `chmod +x Training-1.0.6.AppImage`, then run `./Training-1.0.6.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.6_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
 The .deb installs an AppArmor profile (`/etc/apparmor.d/training-desktop`) that Ubuntu 23.10 and later need before Electron apps can start; removing the package removes it.
 

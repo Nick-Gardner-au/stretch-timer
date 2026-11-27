@@ -27,6 +27,11 @@ export class Player {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") this.resume();
     });
+    // voices load after the page on most systems
+    if (window.speechSynthesis) {
+      this.pickVoice();
+      speechSynthesis.addEventListener?.("voiceschanged", () => this.pickVoice());
+    }
   }
 
   resume() {
@@ -65,13 +70,26 @@ export class Player {
       });
     }
     this.resume();
-    if (window.speechSynthesis && !this.spoken) {
-      // a silent utterance during the tap lets later speech play on iOS
-      const u = new SpeechSynthesisUtterance(" ");
+    if (window.speechSynthesis) {
+      // Speaking during the tap lets later speech play on iPhones. Clear anything stuck first; a
+      // blank utterance can hang the queue on iOS, so use a real (silent) word.
+      this.pickVoice();
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance("ready");
       u.volume = 0;
+      if (this.voice) u.voice = this.voice;
       speechSynthesis.speak(u);
-      this.spoken = true;
     }
+  }
+
+  // An English voice that is installed on the device: Australian, then British, then any English.
+  pickVoice() {
+    if (!window.speechSynthesis) return null;
+    const voices = speechSynthesis.getVoices();
+    const en = voices.filter((v) => /^en[-_]/i.test(v.lang));
+    const by = (re) => en.find((v) => re.test(v.lang) && v.localService) || en.find((v) => re.test(v.lang));
+    this.voice = by(/AU/i) || by(/GB/i) || by(/US/i) || en.find((v) => v.localService) || en[0] || voices[0] || null;
+    return this.voice;
   }
 
   // One knock: inharmonic partials with fast exponential decay, plus a short click.
@@ -116,12 +134,55 @@ export class Player {
 
   say(text) {
     if (!window.speechSynthesis) return;
+    const synth = speechSynthesis;
+    // iPhones sometimes leave speech "speaking" forever after the app was in the background;
+    // nothing queued after that is heard. Clear it if one phrase has run implausibly long.
+    if (synth.speaking && performance.now() - (this.speechStarted || 0) > 8000) synth.cancel();
+    if (synth.paused) synth.resume();
+    if (!this.voice) this.pickVoice();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 1.05;
-    u.lang = "en-GB";
+    if (this.voice) {
+      u.voice = this.voice;
+      u.lang = this.voice.lang;
+    } else u.lang = "en-AU";
+    u.onstart = () => (this.speechStarted = performance.now());
     // speech can interrupt Web Audio on iPhones; restart it when speech ends
-    u.onend = u.onerror = () => this.resume();
-    speechSynthesis.speak(u);
+    u.onend = () => this.resume();
+    u.onerror = (e) => {
+      this.speechError = e.error;
+      this.resume();
+    };
+    this.speechStarted = performance.now();
+    synth.speak(u);
+  }
+
+  // For Settings → Test voice: speaks a phrase and reports what happened.
+  testVoice() {
+    return new Promise((resolve) => {
+      if (!window.speechSynthesis) return resolve("This browser has no speech engine.");
+      const voices = speechSynthesis.getVoices();
+      const voice = this.pickVoice();
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance("Voice test. One, two, three.");
+      if (voice) {
+        u.voice = voice;
+        u.lang = voice.lang;
+      }
+      let done = false;
+      const finish = (msg) => {
+        if (!done) {
+          done = true;
+          resolve(msg);
+        }
+      };
+      const name = voice ? `${voice.name} (${voice.lang})` : "the default voice";
+      u.onstart = () => finish(`Speaking with ${name}. ${voices.length} voices available.`);
+      u.onerror = (e) => finish(`Speech failed (${e.error}). ${voices.length} voices available.`);
+      setTimeout(() => finish(voices.length ? `No speech started after 4 s. ${voices.length} voices available.`
+        : "No voices are installed or enabled on this device."), 4000);
+      speechSynthesis.speak(u);
+    });
   }
 }
 

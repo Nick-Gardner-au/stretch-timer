@@ -12,19 +12,30 @@ function el(tag, attrs = {}, ...children) {
 }
 
 // Heading and three switches. Changes apply at once (also during a workout); onChange(key, on).
-export function soundSection(cfg, onChange) {
+export function soundSection(cfg, onChange, player = null) {
   const row = (key, label) => {
     const box = el("input", { type: "checkbox" });
     box.checked = Boolean(cfg[key]);
     box.addEventListener("change", () => onChange(key, box.checked));
     return el("label", { class: "form-row" }, el("span", {}, label), box);
   };
-  return [
+  const items = [
     el("h2", {}, "SOUND"),
     row("sound", "Sound"),
     row("voice", "Voice (counts and exercise names)"),
     row("ticks", "Tick every second"),
   ];
+  if (player) {
+    const status = el("p", { class: "hint" }, "Voice needs Sound and Voice on, and a voice installed on the device.");
+    const btn = el("button", { class: "btn" }, "Test voice");
+    btn.addEventListener("click", async () => {
+      player.unlock();
+      status.textContent = "Testing…";
+      status.textContent = await player.testVoice();
+    });
+    items.push(el("div", { class: "row-btns" }, btn), status);
+  }
+  return items;
 }
 
 // Fills the "up next" panel: numbered steps, or a single line when there is only a cue.

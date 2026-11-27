@@ -1,6 +1,6 @@
 // Offline support for Pilates Mat: cache the app files, serve from cache, refresh in the background.
 // Bump VERSION whenever you upload changed files so phones pick up the new version.
-const VERSION = "pilates-mat-v6";
+const VERSION = "pilates-mat-v7";
 const FILES = [
   "./", "index.html", "pilates.css", "manifest.webmanifest",
   "js/app.js", "js/data.js", "js/plan.js", "js/store.js",

@@ -548,7 +548,7 @@ class App {
 
   // During a workout only the sound switches and the library are available.
   openQuickSettings() {
-    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on)), ...this.librarySection(),
+    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on), this.player), ...this.librarySection(),
       h("p", { class: "hint" }, "The other settings are available when the workout is stopped.")],
     [h("span", { class: "spacer" }), h("button", { class: "btn primary", onclick: () => this.closeSheet() }, "Done")]);
   }
@@ -566,7 +566,7 @@ class App {
       const breath = h("input", { type: "checkbox", checked: draft.breathVoice, onchange: (e) => (draft.breathVoice = e.target.checked) });
       const over = Math.abs(plan.total - draft.length * 60) > 60;
       body.replaceChildren(...[
-        ...soundSection(draft, (k, on) => this.setSound(k, on, draft)),
+        ...soundSection(draft, (k, on) => this.setSound(k, on, draft), this.player),
         ...this.librarySection(),
         h("h2", {}, "WORKOUT LENGTH"),
         choice(LENGTHS.map((len) => {

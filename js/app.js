@@ -465,7 +465,7 @@ class App {
 
   // During a workout only the sound switches can change.
   openQuickSettings() {
-    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on)),
+    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on), this.player),
       h("p", { class: "hint" }, "The other settings are available when the workout is stopped.")],
     [h("span", { class: "spacer" }), h("button", { class: "btn primary", onclick: () => this.closeSheet() }, "Done")]);
   }
@@ -483,7 +483,7 @@ class App {
     const row = (label, input) => h("label", { class: "form-row" }, h("span", {}, label), input);
 
     const prep = num(cfg.prepare, 0, 60);
-    const body = [...soundSection(cfg, (k, on) => this.setSound(k, on)), h("h2", {}, "TIMING"), row("Prepare countdown (s)", prep)];
+    const body = [...soundSection(cfg, (k, on) => this.setSound(k, on), this.player), h("h2", {}, "TIMING"), row("Prepare countdown (s)", prep)];
     let rest = null;
     const timerIn = {}, ttIn = {}, ttTempo = [], tempoRows = {};
     if (!programs.STANDALONE.includes(prog.kind)) {

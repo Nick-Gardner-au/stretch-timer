@@ -11,6 +11,9 @@ const WEB_ROOT = path.join(__dirname, "web");
 const HOST = "training";
 const START_URL = `app://${HOST}/index.html`;
 
+// Linux: Chromium's speech (voice cues) only works through speech-dispatcher when this is on.
+app.commandLine.appendSwitch("enable-speech-dispatcher");
+
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
 ]);

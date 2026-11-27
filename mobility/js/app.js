@@ -608,7 +608,7 @@ class App {
 
   // During a workout only the sound switches and the library are available.
   openQuickSettings() {
-    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on)), ...this.librarySection(),
+    this.openSheet([...soundSection(this.cfg, (k, on) => this.setSound(k, on), this.player), ...this.librarySection(),
       h("p", { class: "hint" }, "The other settings are available when the workout is stopped.")],
     [h("span", { class: "spacer" }), h("button", { class: "btn primary", onclick: () => this.closeSheet() }, "Done")]);
   }
@@ -625,7 +625,7 @@ class App {
       const prep = h("input", { type: "number", inputmode: "numeric", min: 0, max: 60, value: draft.prepare,
                                 onchange: (e) => { draft.prepare = Math.max(0, Math.min(60, parseInt(e.target.value, 10) || 0)); draw(); } });
       body.replaceChildren(
-        ...soundSection(draft, (k, on) => this.setSound(k, on, draft)),
+        ...soundSection(draft, (k, on) => this.setSound(k, on, draft), this.player),
         ...this.librarySection(),
         h("h2", {}, "SESSION"),
         choice(Object.entries(SESSIONS).map(([k, s]) => [k, s.name.toUpperCase(), `${fmtMinutes(buildPlan({ ...draft, session: k }, this.levels).total)}`]),

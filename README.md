@@ -41,7 +41,7 @@ It now runs full-screen and works offline. Your settings and custom programs are
 - **Silent switch:** on iOS 17 and later, the app plays sound even when the ring/silent switch is set to silent. On older iOS versions, turn silent mode off to hear it.
 - **Screen stays on while the timer runs.** This needs iOS 18.4 or later when opened from the home screen. On older iOS versions, set *Settings → Display & Brightness → Auto-Lock* to a longer time while you work out.
 - **Leaving the app:** if you switch apps or lock the phone, iOS pauses the app and there's no sound. The timer keeps time, though. When you come back, it jumps to where the workout should be now.
-- **Sound, voice and ticks:** in Settings, under Sound. Settings can be opened during a workout to change these; the other settings are available once the workout is stopped.
+- **Sound, voice and ticks:** in Settings, under Sound. **Test voice** there speaks a phrase and reports the voice used, or why none played. Settings can be opened during a workout to change these; the other settings are available once the workout is stopped.
 - **Between exercises:** during the rest before a new exercise, the screen shows that exercise (marked *Up next*) and its instructions.
 - **Program menu:** tap the program name at the top to switch between Nick Program 2, Interval timer, Tempo timer and your custom programs, or to enter a new custom program.
 - **Backup:** *Settings → Backup → Export* saves your settings and custom programs to a file. Use *Import* to load them on another phone, or to load the desktop app's `~/.config/stretch-timer/programs.json`.
@@ -191,8 +191,8 @@ The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a 
 
 Use either file from a build (see below):
 
-1. **AppImage** (any distribution): `chmod +x Training-1.0.4.AppImage`, then run `./Training-1.0.4.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
-2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.4_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+1. **AppImage** (any distribution): `chmod +x Training-1.0.5.AppImage`, then run `./Training-1.0.5.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.5_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
 The .deb installs an AppArmor profile (`/etc/apparmor.d/training-desktop`) that Ubuntu 23.10 and later need before Electron apps can start; removing the package removes it.
 
@@ -210,7 +210,7 @@ If the AppImage does not start on Ubuntu 22.04 or later, install FUSE 2 with `su
 2. **Full screen:** press F11 (or **View → Full Screen**); F11 or Shift+Esc leaves it. In a wide window or full screen the apps switch to a two-column layout, with the exercise and controls on the left and the large timer on the right, and everything scales to the screen size (designed for 1600 × 900, enlarged on bigger screens). Ctrl+= and Ctrl+- make it larger or smaller; **View → Normal size** resets. The window size, full screen and zoom are remembered. Press Alt to show the menu bar.
 3. Space starts and pauses, the ◀ ▶ arrow keys move between exercises, Esc stops.
 4. Backups: Export on the phone and Import on the desktop (or the other way round) to move history and levels across.
-5. Voice cues use the system speech engine. If there is no voice, install it with `sudo apt install speech-dispatcher espeak-ng`.
+5. Voice cues use the system speech engine (speech-dispatcher, installed with Ubuntu and recommended by the .deb). Settings → Sound → **Test voice** speaks a phrase and reports the voice used. If it reports no voices, install them with `sudo apt install speech-dispatcher espeak-ng speech-dispatcher-espeak-ng`, then restart the app.
 
 ## Building it yourself
 

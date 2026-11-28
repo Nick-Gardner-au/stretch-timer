@@ -122,6 +122,54 @@ export function resetLevels(now = Date.now()) {
   return Object.fromEntries(TRACKS.map((t) => [t.id, { level: 1, met: 0, mastered: false, updated: now }]));
 }
 
+// ---------- rebuilding levels from history ----------
+// Each checked-in session stores the level of every exercise done and the result given. Replaying them
+// in order gives the true counts even when check-ins happened on different devices (sync combines
+// history from every device, while a stored count reflects only the device that last changed it).
+// A session whose recorded level differs from the replayed one (a level chosen by hand, or the move
+// to the equipment levels) starts that track again from the recorded level.
+export function replayLevels(history, toProgress) {
+  const state = {};
+  const last = {};
+  const sessions = (history || []).filter((s) => s && s.checked && s.results && s.levels)
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  for (const s of sessions) {
+    const at = Date.parse(s.end || s.start) || 0;
+    for (const [id, result] of Object.entries(s.results)) {
+      const level = s.levels[id];
+      if (!TRACK_BY_ID[id] || !Number.isInteger(level) || level < 1 || level > MAX_LEVEL || !(result in RESULTS)) continue;
+      if (!state[id] || state[id].level !== level) state[id] = { level, met: 0, mastered: false };
+      const { levels } = applyCheckIn({ [id]: state[id] }, { [id]: result }, s.toProgress || toProgress, at);
+      const { level: l, met, mastered } = levels[id];
+      state[id] = { level: l, met, mastered };
+      last[id] = at;
+    }
+  }
+  return { state, last };
+}
+
+// Brings stored levels in line with the replay, except tracks changed by hand after their last check-in.
+export function reconcileLevels(levels, history, toProgress) {
+  const { state, last } = replayLevels(history, toProgress);
+  const next = normaliseLevels(levels);
+  const changed = [];
+  for (const [id, r] of Object.entries(state)) {
+    const cur = next[id];
+    if ((cur.updated || 0) > last[id] + 60000) continue;
+    if (cur.level === r.level && cur.met === r.met && cur.mastered === r.mastered) continue;
+    next[id] = { ...r, updated: Math.max(cur.updated || 0, last[id]) + 1 };
+    changed.push(id);
+  }
+  return { levels: next, changed };
+}
+
+// Reconciles the levels saved on this device; returns the tracks that changed.
+export function reconcileStored() {
+  const { levels, changed } = reconcileLevels(loadLevels(), loadHistory(), loadConfig().toProgress);
+  if (changed.length) saveLevels(levels);
+  return changed;
+}
+
 // Mobility score: levels gained across all tracks, 0-100 %.
 export function score(levels) {
   const gained = TRACKS.reduce((a, t) => a + (levels[t.id].level - 1) + (levels[t.id].mastered ? 1 : 0), 0);

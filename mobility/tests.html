@@ -181,6 +181,37 @@
         eq([r.levels.hipER.updated, r.levels.spExt.updated], [5000, undefined]);
         eq(store.resetLevels(7000).hipER, { level: 1, met: 0, mastered: false, updated: 7000 });
       },
+      "levels are rebuilt from history when a device's count was lost (3 met shown as 2)"() {
+        const at = (d, h) => `2026-11-${d}T${h}:00:00.000Z`;
+        const sess = (id, d, results) => ({ id, start: at(d, "05"), end: at(d, "06"), seconds: 1080, planned: Object.keys(results),
+          done: Object.keys(results), checked: true, results, levels: Object.fromEntries(Object.keys(results).map((k) => [k, 1])) });
+        const history = [
+          sess("thu", 26, { hipFlex: "met", hipAbd: "met", hipIR: "not" }),
+          sess("fri", 27, { hipFlex: "met", hipAbd: "not", hipIR: "met" }),
+          sess("sat", 28, { hipFlex: "met", hipAbd: "met", hipIR: "met" }),
+        ];
+        // what sync left behind: Friday's device only knew one check-in, Saturday's added one
+        const stored = store.normaliseLevels({
+          hipFlex: { level: 1, met: 2, mastered: false, updated: Date.parse(at(28, "06")) - 5000 },
+          hipAbd: { level: 1, met: 1, mastered: false, updated: Date.parse(at(28, "06")) - 5000 },
+          hipIR: { level: 1, met: 2, mastered: false, updated: Date.parse(at(28, "06")) - 5000 },
+        });
+        const { levels, changed } = store.reconcileLevels(stored, history, 3);
+        eq([levels.hipFlex.level, levels.hipFlex.met], [2, 0], "met in all three: level up");
+        eq([levels.hipAbd.level, levels.hipAbd.met], [1, 1], "not yet on Friday resets the run");
+        eq([levels.hipIR.level, levels.hipIR.met], [1, 2]);
+        eq(changed, ["hipFlex"]);
+        eq(store.reconcileLevels(levels, history, 3).changed, [], "stable once reconciled");
+      },
+      "a level chosen by hand after the last check-in is kept; sessions at a chosen level restart the count"() {
+        const s = { id: "a", start: "2026-11-20T05:00:00.000Z", end: "2026-11-20T05:20:00.000Z", seconds: 1, planned: [], done: [],
+          checked: true, results: { spExt: "met" }, levels: { spExt: 1 } };
+        const later = store.setLevel(fresh(), "spExt", 4, Date.parse("2026-11-25T00:00:00Z"));
+        eq(store.reconcileLevels(later, [s], 3).levels.spExt.level, 4, "hand-chosen level kept");
+        const atFour = { ...s, id: "b", start: "2026-11-26T05:00:00.000Z", end: "2026-11-26T05:20:00.000Z", levels: { spExt: 4 } };
+        const r = store.reconcileLevels(later, [s, atFour], 3).levels.spExt;
+        eq([r.level, r.met], [4, 1]);
+      },
       async "the offline cache lists every app file"() {
         const sw = await (await fetch("sw.js")).text();
         for (const f of ["js/app.js", "js/data.js", "js/plan.js", "js/store.js", "mobility.css", "../js/engine.js", "../js/sound.js", "../js/workout.js", "../js/sync.js", "../js/controls.js", "../js/apps.js"]) {

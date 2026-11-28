@@ -169,7 +169,7 @@
   </div>
   <script type="module">
     import { APPS, appUrl, lastApp } from "./js/apps.js";
-    import { syncStatus, setUpSync, syncNow, disconnectSync } from "./js/sync.js";
+    import { syncStatus, setUpSync, syncNow, disconnectSync, syncSoon } from "./js/sync.js";
 
     const fmtDate = (iso) => new Date(iso).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
     const readList = (key) => {
@@ -192,6 +192,7 @@
         const line = lastSession("mobility:history");
         try {
           const store = await import("./mobility/js/store.js");
+          if (store.reconcileStored().length) syncSoon();
           return [line, `Mobility score ${store.score(store.loadLevels())}%`].filter(Boolean).join(" · ");
         } catch {
           return line;

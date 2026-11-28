@@ -56,6 +56,7 @@ const metDots = (state, need) => h("span", { class: "dots" },
 class App {
   constructor() {
     this.cfg = store.loadConfig();
+    this.reconciled = store.reconcileStored(); // counts rebuilt from history (see store.js)
     this.levels = store.loadLevels();
     this.player = new Player();
     this.engine = new Engine({ cue: (...a) => this.cue(...a) });
@@ -84,7 +85,9 @@ class App {
   bind() {
     // another device's progress arrived: pick up new levels unless a workout is under way
     window.addEventListener("training-sync", (e) => {
-      if (e.detail.localChanged && !this.isActive() && !this.session) {
+      if (!e.detail.localChanged) return;
+      if (store.reconcileStored().length) syncSoon();
+      if (!this.isActive() && !this.session) {
         this.levels = store.loadLevels();
         this.rebuildPlan();
       }
@@ -552,11 +555,15 @@ class App {
         current ? pick : h("p", { class: "hint" }, "This track's level has changed since the session; no check-in needed."));
     });
     const apply = () => {
+      // start from the saved levels: progress from another device may have arrived during the workout
+      store.reconcileStored();
+      this.levels = store.loadLevels();
       const chosen = Object.fromEntries(Object.entries(results).filter(([id, r]) => r && this.levels[id].level === (session.levels[id] || 0)));
       const { levels, changes } = store.applyCheckIn(this.levels, chosen, this.cfg.toProgress);
       this.levels = levels;
       store.saveLevels(levels);
       session.results = chosen;
+      session.toProgress = this.cfg.toProgress;
       session.changes = changes;
       session.checked = true;
       this.saveSession(session);
@@ -862,6 +869,7 @@ class App {
 window.mobilityApp = new App();
 rememberApp("mobility");
 watchVisibility();
+if (window.mobilityApp.reconciled.length) syncSoon(500);
 autoSync();
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {

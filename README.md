@@ -56,6 +56,10 @@ It now runs full-screen and works offline. Your settings and custom programs are
 - **Program menu:** tap the program name at the top to switch between Nick Program 2, Interval timer, Tempo timer and your custom programs, or to enter a new custom program.
 - **Backup:** *Settings → Backup → Export* saves your settings and custom programs to a file. Use *Import* to load them on another phone, or to load the desktop app's `~/.config/stretch-timer/programs.json`.
 
+## If an app does not load
+
+If an app shows a message saying it did not load properly, select **Repair**. It downloads a fresh copy of the app; settings, history and levels are kept.
+
 ## Updating the app later
 
 1. Change the files.

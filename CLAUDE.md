@@ -6,7 +6,7 @@ Training: three web apps (PWA) plus a Linux desktop wrapper.
 2. Shared code: `js/engine.js` (timer), `js/sound.js` (sounds, voice), `js/apps.js` (app switcher), `js/controls.js` (Settings sound section, up-next steps), `js/sync.js` (GitHub gist sync of Pilates/Mobility history and Mobility levels), `styles.css`.
    Session records need string `id` and ISO `start`/`end`; Mobility level states carry `updated` (ms) so sync keeps the latest change, and `reconcileStored()` rebuilds counts from checked-in sessions (`results`, `levels`, `toProgress`) so check-ins from every device count. Record deletions with `recordDeleted` (via the stores' `deleteSession`/`clearHistory`).
 3. `desktop/`: Electron app, Linux only (AppImage, .deb). `npm run dist` builds; bump `version` in `desktop/package.json`.
-4. When changing web files, raise `VERSION` in the matching `sw.js` (root, `pilates/`, `mobility/`) and list new files there.
+4. When changing web files, raise `VERSION` in the matching `sw.js` (root, `pilates/`, `mobility/`) and list new files there. Service workers install with `cache: "reload"` so an update never mixes old and new files; `js/recover.js` shows a Repair prompt if an app fails to start.
 5. Tests: `python3 -m http.server 8765`, then `tests.html`, `pilates/tests.html`, `mobility/tests.html`.
 6. Australian English and metric units in all text.
 

@@ -166,6 +166,7 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobilit
    - **Not yet:** the count starts again at this level.
    - **Too hard:** pain, or it could not be done with control. The track steps back a level.
    Choose **Later** to check in from Progress afterwards (most recent session only).
+   The counts are rebuilt from the check-ins saved in your session history whenever the app opens or syncs, so check-ins made on different devices all count.
 5. **Library:** Settings → Library: all 72 exercises by track, with their source (yoga, Pilates, rehab or strength) and equipment. From an exercise's page you can choose that level manually, or exclude the whole track from sessions (for example, for an injury).
 6. **Progress:** mobility score (levels gained across all tracks; 100% = every track mastered at level 6), sessions this week, day streak, level ups, a ladder for every track, and recent sessions.
 7. **Backup:** Settings → Backup → *Export* saves settings, levels and history to a file; *Import* loads it on another phone. *Reset levels* returns every track to level 1.
@@ -176,7 +177,7 @@ After uploading, it is at `https://YOUR-USERNAME.github.io/stretch-timer/mobilit
 python3 -m http.server 8765
 ```
 
-Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/mobility/tests.html to run its 18 tests.
+Then open http://localhost:8765/mobility/ for the app, or http://localhost:8765/mobility/tests.html to run its 20 tests.
 
 ## Files
 
@@ -202,8 +203,8 @@ The same three apps (home screen, Stretch Timer, Pilates Mat and Mobility) as a 
 
 Use either file from a build (see below):
 
-1. **AppImage** (any distribution): `chmod +x Training-1.0.6.AppImage`, then run `./Training-1.0.6.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
-2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.6_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
+1. **AppImage** (any distribution): `chmod +x Training-1.0.7.AppImage`, then run `./Training-1.0.7.AppImage`. To add it to the applications menu, use a tool such as AppImageLauncher or Gear Lever.
+2. **.deb** (Debian, Ubuntu, Mint, Pop!_OS): `sudo apt install ~/Downloads/training-desktop_1.0.7_amd64.deb` (use the folder the file is in; the path must start with `./`, `~/` or `/`). Training then appears in the applications menu. Remove it with `sudo apt remove training-desktop`.
 
 The .deb installs an AppArmor profile (`/etc/apparmor.d/training-desktop`) that Ubuntu 23.10 and later need before Electron apps can start; removing the package removes it.
 

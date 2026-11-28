@@ -1,6 +1,6 @@
 // Offline support for Mobility: cache the app files, serve from cache, refresh in the background.
 // Bump VERSION whenever you upload changed files so phones pick up the new version.
-const VERSION = "mobility-v7";
+const VERSION = "mobility-v8";
 const FILES = [
   "./", "index.html", "mobility.css", "manifest.webmanifest",
   "js/app.js", "js/data.js", "js/plan.js", "js/store.js",
